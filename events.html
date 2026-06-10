@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events Directory - UniEvent</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    /* Custom Styling for Search & Filter Section */
+    .filter-section {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .filter-tags-container {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      padding: 8px 20px;
+      border-radius: 50px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .filter-tag:hover, .filter-tag.active {
+      background: var(--primary-gradient);
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Particle background canvas -->
+  <canvas id="particles-canvas"></canvas>
+  <div class="bg-pattern-fade"></div>
+
+  <!-- Background Orbs -->
+  <div class="floating-orb orb-1"></div>
+  <div class="floating-orb orb-2"></div>
+  <div class="floating-orb orb-3"></div>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar" id="main-navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        🏫 Uni<span>Event</span>
+      </a>
+      
+      <ul class="nav-links">
+        <li class="nav-item"><a href="index.html">Home</a></li>
+        <li class="nav-item active"><a href="events.html">Events</a></li>
+        <li class="nav-item"><a href="clubs.html">Clubs</a></li>
+        <li class="nav-actions-mobile"></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Injected dynamically via app.js -->
+      </div>
+
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Explorer Section -->
+  <section style="padding: 140px 0 80px 0; min-height: 90vh;">
+    <div class="container">
+      
+      <!-- Page Header title -->
+      <div style="margin-bottom: 40px;" class="reveal">
+        <span style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem; text-transform: uppercase;">Explore</span>
+        <h2 style="font-size: 2.25rem; margin-top: 8px; font-weight: 700;">University Events</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Join coding challenges, cultural highlights, sports runs and academic discussions</p>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="filter-section reveal">
+        <div class="search-row">
+          <div style="position: relative;">
+            <input type="text" id="event-search" class="form-control" placeholder="Search events by title, club or location..." style="padding-left: 44px;">
+            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-muted);">🔍</span>
+          </div>
+          <div>
+            <input type="date" id="event-date-filter" class="form-control" style="cursor: pointer;">
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid rgba(226, 232, 240, 0.6); padding-top: 16px; display:flex; align-items:center; gap: 16px; flex-wrap:wrap;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-color);">Category:</span>
+          <div class="filter-tags-container">
+            <div class="filter-tag active" data-category="All">All Events</div>
+            <div class="filter-tag" data-category="Academic">Academic / Tech</div>
+            <div class="filter-tag" data-category="Cultural">Cultural / Jam</div>
+            <div class="filter-tag" data-category="Athletics">Athletics / Sports</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Catalog Grid -->
+      <div class="dashboard-events-grid reveal" id="events-grid-container">
+        <!-- Injected dynamically via js/events.js -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🏫 UniEvent</h3>
+          <p>Connecting campus communities, clubs, and students through modern events management solutions.</p>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="events.html">Events Directory</a></li>
+            <li><a href="clubs.html">Clubs Directory</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Student Union</a></li>
+            <li><a href="#">Support Desk</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-contact">
+          <h4>Contact Us</h4>
+          <p>📞 +1 (555) 123-4567</p>
+          <p>✉️ support@unievent.edu</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 UniEvent - University Event & Club Management System. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/events.js"></script>
+</body>
+</html>

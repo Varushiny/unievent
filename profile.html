@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Profile - UniEvent</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Particle background canvas -->
+  <canvas id="particles-canvas"></canvas>
+  <div class="bg-pattern-fade"></div>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="sidebar-logo">🏫 Uni<span>Event</span></a>
+      </div>
+      
+      <div class="sidebar-user">
+        <div class="user-avatar">
+          <!-- Initial letter -->
+        </div>
+        <div class="user-info">
+          <span class="user-name">Loading...</span>
+          <span class="user-role">Student</span>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="sidebar-item">
+          <a href="dashboard.html">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="events.html">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Explore Events
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="clubs.html">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Active Clubs
+          </a>
+        </li>
+        <li class="sidebar-item" id="create-event-sidebar-item" style="display: none;">
+          <a href="create-event.html">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Create Event
+          </a>
+        </li>
+        <li class="sidebar-item active">
+          <a href="profile.html">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            My Profile
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <a href="#" id="sidebar-logout" style="display:flex; align-items:center; gap:12px; font-size:0.9rem; font-weight:500;">
+          <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; stroke-width:2; fill:none; flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="profile-page-view">
+      
+      <!-- Header -->
+      <header class="main-header">
+        <div style="display:flex; align-items:center; gap: 16px;">
+          <button class="mobile-sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+          <div class="page-title">
+            <h2>Student Profile</h2>
+            <p>View and manage your personal profile settings and enrollments</p>
+          </div>
+        </div>
+        
+        <div class="header-controls">
+          <a href="profile.html" class="user-avatar" style="width: 40px; height: 40px; cursor: pointer;">
+            <!-- Avatar letter -->
+          </a>
+        </div>
+      </header>
+
+      <!-- Profile Cover Banner & Profile Meta Card -->
+      <section>
+        <div class="profile-cover"></div>
+        <div class="profile-header-card">
+          <div class="profile-avatar-container">
+            <div class="user-avatar" style="width:100%; height:100%; border-radius:0; border:none; font-size: 3rem;">
+              <!-- Initial letter dynamic -->
+            </div>
+          </div>
+          <div class="profile-meta">
+            <h3 id="profile-title-name">Student Name</h3>
+            <p id="profile-title-role">Student</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Form and List Details Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left: Edit Form details -->
+        <div>
+          <div class="section-header">
+            <h3>Personal Information</h3>
+          </div>
+          <div class="glass-card fade-in">
+            <form id="profile-edit-form">
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="profile-name" class="form-label">Full Name</label>
+                  <input type="text" id="profile-name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="profile-id" class="form-label">Student ID</label>
+                  <input type="text" id="profile-id" class="form-control" disabled style="background:#F1F5F9; cursor:not-allowed;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="profile-email" class="form-label">Registered Email</label>
+                <input type="email" id="profile-email" class="form-control" required>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="profile-faculty" class="form-label">Faculty</label>
+                  <select id="profile-faculty" class="form-control" style="cursor: pointer;">
+                    <option value="Engineering">Engineering</option>
+                    <option value="Science">Science</option>
+                    <option value="Business">Business Administration</option>
+                    <option value="Arts">Humanities & Arts</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="profile-dept" class="form-label">Department</label>
+                  <input type="text" id="profile-dept" class="form-control" required>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; margin-top:24px; border-top:1px solid #E2E8F0; padding-top:20px;">
+                <button type="submit" class="btn btn-primary btn-animate">Save Profile</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Side: Lists details (events/clubs enrolled) -->
+        <div>
+          <!-- Enrolled Events -->
+          <div class="section-header">
+            <h3>My Registrations</h3>
+          </div>
+          <div id="profile-events-list">
+            <!-- Injected dynamically via js/events.js -->
+          </div>
+
+          <!-- Enrolled Clubs -->
+          <div class="section-header" style="margin-top: 32px;">
+            <h3>Joined Clubs</h3>
+          </div>
+          <div id="profile-clubs-list">
+            <!-- Injected dynamically via js/events.js -->
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/events.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = db.getCurrentUser();
+      if (user) {
+        // Expose create event if admin or leader
+        if (user.role === 'leader' || user.role === 'admin') {
+          const createItem = document.getElementById('create-event-sidebar-item');
+          if (createItem) createItem.style.display = 'block';
+        }
+      }
+
+      // Logout handler
+      document.getElementById('sidebar-logout').addEventListener('click', (e) => {
+        e.preventDefault();
+        db.setCurrentUser(null);
+        showToast('Logged out successfully', 'success');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      });
+    });
+  </script>
+</body>
+</html>

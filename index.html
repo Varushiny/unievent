@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniEvent - University Event & Club Management System</title>
+  <meta name="description" content="Manage University Events and Clubs efficiently. Explore workshops, sports activities, cultural jams and more at your campus innovation hub.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Particle Background Canvas -->
+  <canvas id="particles-canvas"></canvas>
+  <div class="bg-pattern-fade"></div>
+
+  <!-- Background Orbs -->
+  <div class="floating-orb orb-1"></div>
+  <div class="floating-orb orb-2"></div>
+  <div class="floating-orb orb-3"></div>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar" id="main-navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        🏫 Uni<span>Event</span>
+      </a>
+      
+      <ul class="nav-links">
+        <li class="nav-item active"><a href="index.html">Home</a></li>
+        <li class="nav-item"><a href="events.html">Events</a></li>
+        <li class="nav-item"><a href="clubs.html">Clubs</a></li>
+        <!-- mobile actions inside link container -->
+        <li class="nav-actions-mobile"></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Injected dynamically via app.js depending on auth status -->
+      </div>
+
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="reveal" style="padding: 180px 0 120px 0; min-height: 85vh; display: flex; align-items: center; position: relative;">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 64px; align-items: center;">
+        
+        <div>
+          <span style="background: rgba(30, 64, 175, 0.08); color: var(--primary-color); font-weight: 600; font-size: 0.85rem; padding: 6px 18px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 24px; border: 1px solid rgba(30, 64, 175, 0.15);">
+            🎓 Campus Hub Portal
+          </span>
+          <h1 style="font-size: clamp(2.75rem, 5.5vw, 4rem); line-height: 1.1; margin-bottom: 24px; font-weight: 800; letter-spacing: -0.5px;">
+            Manage University <br>
+            <span style="background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Events & Clubs</span> <br>
+            Efficiently.
+          </h1>
+          <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; max-width: 560px; line-height: 1.7;">
+            The ultimate digital campus hub. Discover new workshops, sports varsity competitions, concert jams, and join leading student clubs in seconds.
+          </p>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <a href="signup.html" class="btn btn-primary" style="box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.35);">
+              Get Started
+            </a>
+            <a href="events.html" class="btn btn-secondary">
+              Explore Events
+            </a>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; position: relative;">
+          <!-- Custom HTML Geometric/Campus Illustration -->
+          <div class="glass-card" style="width: 100%; max-width: 400px; height: 390px; display: flex; flex-direction: column; justify-content: space-between; position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 30px 60px -15px rgba(30, 64, 175, 0.1); border: 1px solid rgba(255, 255, 255, 0.65);">
+            <div style="background: var(--primary-gradient); height: 190px; width: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 3.5rem; position: relative; overflow: hidden;">
+              🎓
+              <div style="position: absolute; top:-50%; left:-50%; width:200%; height:200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(45deg); animation: float1 8s infinite linear;"></div>
+            </div>
+            <div style="padding: 24px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; background: rgba(255,255,255,0.45);">
+              <div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 6px;">Annual Campus Fest</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Organized by Music & Art Society</p>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(226, 232, 240, 0.8); padding-top: 16px;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary-color);">📅 June 30, 2026</span>
+                <span style="background: rgba(16, 185, 129, 0.12); color: var(--success-color); padding: 4px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;">Open</span>
+              </div>
+            </div>
+            
+            <!-- Absolute Decorative Mini cards -->
+            <div class="glass-card hover-lift" style="position: absolute; bottom: 190px; left: -28px; padding: 12px 18px; display: flex; align-items: center; gap: 12px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: 0 10px 25px rgba(30,64,175,0.06);">
+              <span style="font-size: 1.5rem;">🚀</span>
+              <div>
+                <div style="font-weight: 700; font-size: 0.85rem;">12+ Clubs</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Active Hub</div>
+              </div>
+            </div>
+            
+            <div class="glass-card hover-lift" style="position: absolute; top: 120px; right: -24px; padding: 12px 18px; display: flex; align-items: center; gap: 12px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: 0 10px 25px rgba(30,64,175,0.06);">
+              <span style="font-size: 1.5rem;">🔥</span>
+              <div>
+                <div style="font-weight: 700; font-size: 0.85rem;">2.5k+ Students</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Registered</div>
+              </div>
+            </div>
+
+            <!-- Floating tiny items -->
+            <div class="glass-card spin-slow" style="position: absolute; top: -16px; left: -16px; padding: 8px 10px; border-radius: 50%; box-shadow: var(--glass-shadow); border: 1px solid rgba(255,255,255,0.8);">
+              📚
+            </div>
+            <div class="glass-card hover-lift" style="position: absolute; bottom: -16px; right: -16px; padding: 8px 10px; border-radius: 50%; box-shadow: var(--glass-shadow); border: 1px solid rgba(255,255,255,0.8);">
+              🏆
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave Divider 1 -->
+  <div class="wave-divider">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,32L80,42.7C160,53,320,75,480,74.7C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z" style="fill:#FFFFFF;"></path>
+    </svg>
+  </div>
+
+  <!-- Statistics Section -->
+  <section class="reveal" style="padding: 60px 0; background: #FFFFFF; position: relative; z-index: 1;">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; text-align: center;">
+        
+        <div>
+          <div style="font-size: 3rem; font-weight: 800; color: var(--primary-color); letter-spacing:-1px;" class="count-number" data-target="150">0</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600; margin-top: 8px;">Total Events</p>
+        </div>
+
+        <div>
+          <div style="font-size: 3rem; font-weight: 800; color: var(--accent-color); letter-spacing:-1px;" class="count-number" data-target="24">0</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600; margin-top: 8px;">Active Clubs</p>
+        </div>
+
+        <div>
+          <div style="font-size: 3rem; font-weight: 800; color: var(--success-color); letter-spacing:-1px;" class="count-number" data-target="4500">0</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600; margin-top: 8px;">Registered Students</p>
+        </div>
+
+        <div>
+          <div style="font-size: 3rem; font-weight: 800; color: var(--danger-color); letter-spacing:-1px;" class="count-number" data-target="15">0</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600; margin-top: 8px;">Upcoming Activities</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave Divider 2 -->
+  <div class="wave-divider" style="transform: rotate(180deg); margin-top: -1px; z-index: 1;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,32L80,42.7C160,53,320,75,480,74.7C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z" style="fill:#FFFFFF;"></path>
+    </svg>
+  </div>
+
+  <!-- Features Section -->
+  <section class="reveal" style="padding: 100px 0; position: relative;">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 64px;">
+        <span style="color: var(--secondary-color); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Portal Features</span>
+        <h2 style="font-size: 2.25rem; margin-top: 8px; font-weight: 800; letter-spacing: -0.5px;">Designed for Campus Life</h2>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 12px auto 0 auto; font-size: 0.95rem;">Streamline how clubs coordinate events and how students stay active in student communities.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px;">
+        
+        <div class="glass-card" style="text-align: center; padding: 40px 24px; border-radius: var(--radius-md);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(30, 64, 175, 0.08); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 24px auto;">
+            📅
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 12px; font-weight: 700;">Event Management</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Create, update, and manage public events, calendar listings, and student invite cards seamlessly.</p>
+        </div>
+
+        <div class="glass-card" style="text-align: center; padding: 40px 24px; border-radius: var(--radius-md);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(245, 158, 11, 0.08); color: var(--accent-color); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 24px auto;">
+            👥
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 12px; font-weight: 700;">Club Directory</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Browse campus clubs, apply to join, check member ratios, and follow club-specific bulletins.</p>
+        </div>
+
+        <div class="glass-card" style="text-align: center; padding: 40px 24px; border-radius: var(--radius-md);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.08); color: var(--success-color); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 24px auto;">
+            ✓
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 12px; font-weight: 700;">Easy Registration</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Register for events with a single click. Receive ticket summaries and add dates directly to your dashboard calendar.</p>
+        </div>
+
+        <div class="glass-card" style="text-align: center; padding: 40px 24px; border-radius: var(--radius-md);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.08); color: var(--danger-color); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 24px auto;">
+            🔔
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 12px; font-weight: 700;">Instant Notifications</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Receive real-time toast updates, calendar alerts, and changes on events you follow.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave Divider 3 -->
+  <div class="wave-divider" style="z-index: 1;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,32L80,42.7C160,53,320,75,480,74.7C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z" style="fill:rgba(255,255,255,0.55);"></path>
+    </svg>
+  </div>
+
+  <!-- Popular Events Section -->
+  <section class="reveal" style="padding: 80px 0 120px 0; background: rgba(255,255,255,0.55); position: relative; z-index: 1;">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
+        <div>
+          <span style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Discover</span>
+          <h2 style="font-size: 2.25rem; margin-top: 8px; font-weight: 800; letter-spacing: -0.5px;">Popular Events</h2>
+        </div>
+        <a href="events.html" class="btn btn-secondary">See All Events</a>
+      </div>
+
+      <!-- Events Dynamic Grid -->
+      <div class="dashboard-events-grid" id="events-grid-container">
+        <!-- Injected dynamically via js/events.js on DOMContentLoaded -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🏫 UniEvent</h3>
+          <p>Connecting campus communities, clubs, and students through modern events management solutions.</p>
+          <div class="social-links">
+            <a href="#" class="social-icon">🔵</a>
+            <a href="#" class="social-icon">🐤</a>
+            <a href="#" class="social-icon">📸</a>
+            <a href="#" class="social-icon">💼</a>
+          </div>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="events.html">Events Directory</a></li>
+            <li><a href="clubs.html">Clubs Directory</a></li>
+            <li><a href="signup.html">Join Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Student Union</a></li>
+            <li><a href="#">Support Desk</a></li>
+            <li><a href="#">Admin Portal</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-contact">
+          <h4 style="color: var(--white); margin-bottom: 24px;">Contact Us</h4>
+          <p>📞 +1 (555) 123-4567</p>
+          <p>✉️ support@unievent.edu</p>
+          <p>📍 100 University Blvd, Campus Quad</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 UniEvent - University Event & Club Management System. All rights reserved.</p>
+        <p>Built with ❤️ for Students</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/events.js"></script>
+</body>
+</html>

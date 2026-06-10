@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - UniEvent</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Particle background canvas -->
+  <canvas id="particles-canvas"></canvas>
+  <div class="bg-pattern-fade"></div>
+
+  <!-- Background Orbs -->
+  <div class="floating-orb orb-1"></div>
+  <div class="floating-orb orb-2"></div>
+  <div class="floating-orb orb-3"></div>
+
+  <!-- Top Navigation Link -->
+  <div style="position: absolute; top: 24px; left: 24px;">
+    <a href="index.html" style="font-weight:600; font-size: 1.1rem; color: var(--primary-color);">🏫 Uni<span>Event</span></a>
+  </div>
+
+  <!-- Login Card Container -->
+  <div class="glass-card fade-in" style="max-width: 440px; width: 100%; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -10px rgba(30, 64, 175, 0.1);">
+    <h2 style="font-size: 1.75rem; margin-bottom: 8px; font-weight: 700;">Welcome Back!</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px;">Access your university events & clubs dashboard</p>
+
+    <!-- Login Form -->
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-email" class="form-label">Student Email</label>
+        <input type="email" id="login-email" class="form-control" placeholder="name@unievent.com" required>
+      </div>
+
+      <div class="form-group" style="position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label for="login-pass" class="form-label" style="margin-bottom:0;">Password</label>
+          <a href="#" id="forgot-pass-btn" style="font-size:0.8rem; color: var(--secondary-color); font-weight: 500;">Forgot Password?</a>
+        </div>
+        <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <label class="form-checkbox">
+          <input type="checkbox" id="remember-me" style="accent-color: var(--primary-color);">
+          Remember Me
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-animate" style="width: 100%; margin-bottom: 24px; font-weight: 600;">
+        Sign In
+      </button>
+
+      <p style="font-size: 0.9rem; color: var(--text-muted);">
+        Don't have an account? <a href="signup.html" style="color: var(--primary-color); font-weight: 600;">Sign Up here</a>
+      </p>
+    </form>
+
+    <!-- Demo Accounts Tooltip -->
+    <div style="margin-top: 32px; padding: 16px; border-radius: var(--radius-sm); background: rgba(59, 130, 246, 0.08); border: 1px dashed rgba(59, 130, 246, 0.3); text-align: left;">
+      <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary-color); margin-bottom: 8px; display:flex; align-items:center; gap: 6px;">
+        💡 Quick Demo Accounts
+      </div>
+      <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.5;">
+        <strong>Student:</strong> student@unievent.com / password123 <br>
+        <strong>Club Leader:</strong> leader@unievent.com / password123 <br>
+        <strong>Admin:</strong> admin@unievent.com / password123
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Redirect if already logged in
+      if (db.getCurrentUser()) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      const form = document.getElementById('login-form');
+      const forgotBtn = document.getElementById('forgot-pass-btn');
+
+      forgotBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showToast('Password reset link sent to registered email!', 'success');
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-pass').value;
+        const users = db.get('uni_users', []);
+
+        // Authenticate
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
+
+        if (user) {
+          db.setCurrentUser(user);
+          showToast(`Welcome back, ${user.name}!`, 'success');
+          
+          // Get redirect url from query params if exists
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectPath = urlParams.get('redirect');
+          
+          setTimeout(() => {
+            if (redirectPath) {
+              window.location.href = decodeURIComponent(redirectPath);
+            } else {
+              window.location.href = 'dashboard.html';
+            }
+          }, 1200);
+        } else {
+          showToast('Invalid email or password. Please try again.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
