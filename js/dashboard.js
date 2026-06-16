@@ -1,26 +1,26 @@
 /**
  * UniEvent - Student Dashboard Scripts
- * Handles sidebar profiles, statistics widgets, registered events list, recent activities, and calendar events.
+ * Refactored to fetch profile statistics, calendar markers, and registrations from PHP APIs.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Ensure user is logged in
-  authGuard();
+  await authGuard();
 
-  const currentUser = db.getCurrentUser();
+  const currentUser = await db.getCurrentUser();
   if (!currentUser) return;
 
   // Initialize Sidebar details
   updateSidebarProfile(currentUser);
 
-  // Initialize Mobile Sidebar toggle
+  // Setup Mobile Sidebar toggle
   setupMobileSidebar();
 
   // Populate Dashboard statistics & contents
-  populateDashboardStats(currentUser.id);
+  await populateDashboardStats(currentUser.id);
   populateRecentActivities(currentUser.id);
-  populateUpcomingEvents(currentUser.id);
-  
+  await populateUpcomingEvents(currentUser.id);
+  await setupCalendar(currentUser.id);
 });
 
 // Update profile display in sidebar
@@ -66,15 +66,19 @@ function setupMobileSidebar() {
 }
 
 // Populate statistics cards
-function populateDashboardStats(userId) {
-  const registrations = db.get('uni_registrations', []);
-  const events = db.get('uni_events', []);
+async function populateDashboardStats(userId) {
+  const memberships = db.get('uni_memberships', []);
+  const events = await db.getEvents();
+  const myEvents = await db.getMyEvents();
 
   // Filter for user
-  const userRegs = registrations.filter(r => r.studentId === userId);
+  const userClubs = memberships.filter(m => m.studentId === userId);
   
   const regCountEl = document.getElementById('stat-regs-count');
-  if (regCountEl) regCountEl.textContent = userRegs.length;
+  if (regCountEl) regCountEl.textContent = myEvents.length;
+
+  const clubCountEl = document.getElementById('stat-clubs-count');
+  if (clubCountEl) clubCountEl.textContent = userClubs.length;
 
   const upcomingCountEl = document.getElementById('stat-upcoming-count');
   if (upcomingCountEl) {
@@ -85,7 +89,7 @@ function populateDashboardStats(userId) {
   }
 }
 
-// Populate recent activity log
+// Populate recent activity log (retains local activities tracking)
 function populateRecentActivities(userId) {
   const container = document.getElementById('activity-list-container');
   if (!container) return;
@@ -109,7 +113,10 @@ function populateRecentActivities(userId) {
     let icon = '🔔';
     let colorClass = '';
     
-    if (act.type === 'event_register') {
+    if (act.type === 'club_join') {
+      icon = '👥';
+      colorClass = 'marker-green';
+    } else if (act.type === 'event_register') {
       icon = '📅';
       colorClass = 'marker-amber';
     } else if (act.type === 'event_create') {
@@ -147,18 +154,14 @@ function formatRelativeTime(date) {
 }
 
 // Populate Registered / Upcoming Events List
-function populateUpcomingEvents(userId) {
+async function populateUpcomingEvents(userId) {
   const container = document.getElementById('dashboard-events-table-body');
   const emptyState = document.getElementById('dashboard-events-empty-state');
   
   if (!container) return;
 
-  const registrations = db.get('uni_registrations', []);
-  const events = db.get('uni_events', []);
-
-  // Filter events user registered for
-  const userRegs = registrations.filter(r => r.studentId === userId);
-  const userEvents = events.filter(e => userRegs.some(r => r.eventId === e.id));
+  // Fetch student registered events asynchronously
+  const userEvents = await db.getMyEvents();
 
   if (userEvents.length === 0) {
     if (emptyState) emptyState.style.display = 'block';
@@ -196,9 +199,9 @@ function populateUpcomingEvents(userId) {
 
   // Cancel registration listeners
   container.querySelectorAll('.btn-cancel-reg').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const eventId = e.target.getAttribute('data-event-id');
-      cancelRegistration(userId, eventId);
+      await cancelRegistration(userId, eventId);
     });
   });
 }
@@ -209,35 +212,38 @@ function formatDateString(dateStr) {
 }
 
 // Cancel registration function
-function cancelRegistration(userId, eventId) {
-  let registrations = db.get('uni_registrations', []);
-  const event = db.get('uni_events', []).find(e => e.id === eventId);
+async function cancelRegistration(userId, eventId) {
+  const userEvents = await db.getMyEvents();
+  const event = userEvents.find(e => e.id === eventId);
   const eventName = event ? event.title : 'Event';
 
-  registrations = registrations.filter(r => !(r.studentId === userId && r.eventId === eventId));
-  db.set('uni_registrations', registrations);
+  const result = await db.cancelEventRegistration(eventId);
 
-  // Add activity log
-  let activities = db.get('uni_activities', []);
-  activities.push({
-    studentId: userId,
-    type: 'event_cancel',
-    text: `Cancelled registration for ${eventName}`,
-    time: new Date().toISOString()
-  });
-  db.set('uni_activities', activities);
+  if (result.success) {
+    // Add activity log
+    let activities = db.get('uni_activities', []);
+    activities.push({
+      studentId: userId,
+      type: 'event_cancel',
+      text: `Cancelled registration for ${eventName}`,
+      time: new Date().toISOString()
+    });
+    db.set('uni_activities', activities);
 
-  showToast(`Registration for ${eventName} cancelled`, 'error');
+    showToast(`Registration for ${eventName} cancelled`, 'error');
 
-  // Refresh page data
-  populateDashboardStats(userId);
-  populateRecentActivities(userId);
-  populateUpcomingEvents(userId);
-  
+    // Refresh page data
+    await populateDashboardStats(userId);
+    populateRecentActivities(userId);
+    await populateUpcomingEvents(userId);
+    await setupCalendar(userId);
+  } else {
+    showToast(result.message || 'Cancellation failed', 'error');
+  }
 }
 
 // Build interactive calendar view
-function setupCalendar(userId) {
+async function setupCalendar(userId) {
   const calTitle = document.getElementById('calendar-month-year');
   const calGrid = document.getElementById('calendar-grid-days');
 
@@ -255,10 +261,7 @@ function setupCalendar(userId) {
   const totalDays = new Date(year, month + 1, 0).getDate();
 
   // Get user registered events for this month
-  const registrations = db.get('uni_registrations', []);
-  const events = db.get('uni_events', []);
-  const userRegs = registrations.filter(r => r.studentId === userId);
-  const userEvents = events.filter(e => userRegs.some(r => r.eventId === e.id));
+  const userEvents = await db.getMyEvents();
 
   // Extract dates that have events
   const eventDates = userEvents

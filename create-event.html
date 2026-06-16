@@ -29,7 +29,7 @@
 
       <ul class="sidebar-nav">
         <li class="sidebar-item">
-          <a href="dashboard.html">
+          <a href="dashboard.php">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
             Dashboard
           </a>
@@ -82,17 +82,16 @@
       <div style="max-width: 800px; margin: 0 auto; width: 100%;">
         <div class="glass-card fade-in">
           
-          <form id="create-event-form">
+          <form action="actions/submit_event_process.php" method="POST">
             <div class="form-group">
               <label for="event-title" class="form-label">Event Title</label>
-              <input type="text" id="event-title" class="form-control" placeholder="e.g. Annual Programming Hackathon" required>
+              <input type="text" id="event-title" name="title" class="form-control" placeholder="e.g. Annual Programming Hackathon" required>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-
                 <label for="event-category" class="form-label">Category</label>
-                <select id="event-category" class="form-control" style="cursor: pointer;">
+                <select id="event-category" name="category" class="form-control" style="cursor: pointer;">
                   <option value="Academic">Academic / Tech</option>
                   <option value="Cultural">Cultural / Jam</option>
                   <option value="Athletics">Athletics / Sports</option>
@@ -103,23 +102,23 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="event-date" class="form-label">Date</label>
-                <input type="date" id="event-date" class="form-control" required>
+                <input type="date" id="event-date" name="date" class="form-control" required>
               </div>
 
               <div class="form-group">
                 <label for="event-time" class="form-label">Time</label>
-                <input type="time" id="event-time" class="form-control" required>
+                <input type="time" id="event-time" name="time" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group">
               <label for="event-venue" class="form-label">Venue / Location</label>
-              <input type="text" id="event-venue" class="form-control" placeholder="e.g. Auditorium Hall B, Campus Quad" required>
+              <input type="text" id="event-venue" name="venue" class="form-control" placeholder="e.g. Auditorium Hall B, Campus Quad" required>
             </div>
 
             <div class="form-group">
               <label for="event-desc" class="form-label">Description</label>
-              <textarea id="event-desc" class="form-control" rows="5" placeholder="Detail the event description, schedule, prizes and participant instructions..." required style="resize: vertical; font-family: var(--font-main);"></textarea>
+              <textarea id="event-desc" name="description" class="form-control" rows="5" placeholder="Detail the event description, schedule, prizes and participant instructions..." required style="resize: vertical; font-family: var(--font-main);"></textarea>
             </div>
 
            <!-- <div class="form-group">
@@ -133,7 +132,7 @@
             </div>-->
 
             <div style="display:flex; justify-content:flex-end; gap: 16px; margin-top: 32px; border-top: 1px solid #E2E8F0; padding-top: 24px;">
-              <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+              <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
               <button type="submit" class="btn btn-primary">Publish Event</button>
             </div>
 
