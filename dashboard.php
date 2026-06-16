@@ -1,6 +1,46 @@
 <?php
 require_once 'config/session.php';
+require_once 'config/db.php';
 requireLogin();
+
+$student_id = $_SESSION['student_id'];
+
+// 1. Fetch registered events
+try {
+    $stmt = $pdo->prepare("
+        SELECT e.* FROM event e 
+        JOIN registrations r ON e.event_id = r.event_id 
+        WHERE r.student_id = ? 
+        ORDER BY e.date ASC
+    ");
+    $stmt->execute([$student_id]);
+    $my_events = $stmt->fetchAll();
+} catch (\PDOException $e) {
+    $my_events = [];
+}
+
+// 2. Fetch submitted events and their approval status
+try {
+    $stmt = $pdo->prepare("
+        SELECT * FROM event 
+        WHERE created_by = ? 
+        ORDER BY created_at DESC
+    ");
+    $stmt->execute([$student_id]);
+    $my_submitted_events = $stmt->fetchAll();
+} catch (\PDOException $e) {
+    $my_submitted_events = [];
+}
+
+// 3. Stats calculations
+$registered_count = count($my_events);
+$upcoming_registered_count = 0;
+$today = date('Y-m-d');
+foreach ($my_events as $evt) {
+    if ($evt['status'] === 'approved' && $evt['date'] >= $today) {
+        $upcoming_registered_count++;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,7 +137,7 @@ requireLogin();
       <section class="stats-row">
         <div class="stat-card">
           <div class="stat-details">
-            <span class="stat-number" id="stat-regs-count">0</span>
+            <span class="stat-number" id="stat-regs-count"><?php echo $registered_count; ?></span>
             <span class="stat-label">Registered Events</span>
           </div>
          
@@ -107,7 +147,7 @@ requireLogin();
 
         <div class="stat-card">
           <div class="stat-details">
-            <span class="stat-number" id="stat-upcoming-count">0</span>
+            <span class="stat-number" id="stat-upcoming-count"><?php echo $upcoming_registered_count; ?></span>
             <span class="stat-label">Upcoming Activities</span>
           </div>
           
@@ -145,11 +185,102 @@ requireLogin();
                 </tr>
               </thead>
               <tbody id="dashboard-events-table-body">
-                <!-- Injected dynamically via js/dashboard.js -->
+                <?php if (empty($my_events)): ?>
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 48px; color: var(--text-muted);">
+                      <h4>No Event Registrations</h4>
+                      <p style="font-size: 0.9rem; margin-top: 8px;">Browse upcoming events to sign up and join lists.</p>
+                    </td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($my_events as $evt): ?>
+                    <?php
+                      $isPast = strtotime($evt['date']) < strtotime(date('Y-m-d'));
+                      $statusText = $isPast ? 'Completed' : 'Upcoming';
+                      $badgeClass = $isPast ? 'badge-danger' : 'badge-success';
+                    ?>
+                    <tr>
+                      <td>
+                        <div style="font-weight: 600; color: var(--text-color);"><?php echo htmlspecialchars($evt['title']); ?></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);"><?php echo htmlspecialchars($evt['club_name']); ?></div>
+                      </td>
+                      <td>
+                        📅 <?php echo date('M j, Y', strtotime($evt['date'])); ?><br>
+                        ⏰ <?php echo date('H:i', strtotime($evt['time'])); ?>
+                      </td>
+                      <td>📍 <?php echo htmlspecialchars($evt['location']); ?></td>
+                      <td><span class="status-badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span></td>
+                      <td>
+                        <form action="actions/cancel_registration_process.php" method="POST" style="margin: 0;">
+                          <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($evt['event_id']); ?>">
+                          <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                            Cancel
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
         </div>
+
+        <!-- Submitted Events Queue -->
+        <div style="margin-top: 40px;">
+          <div class="section-header">
+            <h3>My Submitted Events</h3>
+          </div>
+
+          <div class="responsive-table-container">
+            <table class="responsive-table">
+              <thead>
+                <tr>
+                  <th>Event Details</th>
+                  <th>Schedule</th>
+                  <th>Venue</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (empty($my_submitted_events)): ?>
+                  <tr>
+                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                      You have not submitted any event requests.
+                    </td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($my_submitted_events as $evt): ?>
+                    <?php
+                      $status = $evt['status'];
+                      $badgeClass = '';
+                      if ($status === 'approved') {
+                          $badgeClass = 'badge-success';
+                      } elseif ($status === 'rejected') {
+                          $badgeClass = 'badge-danger';
+                      } else {
+                          $badgeClass = 'badge-warning';
+                      }
+                    ?>
+                    <tr>
+                      <td>
+                        <div style="font-weight: 600; color: var(--text-color);"><?php echo htmlspecialchars($evt['title']); ?></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);"><?php echo htmlspecialchars($evt['category']); ?></div>
+                      </td>
+                      <td>
+                        📅 <?php echo date('M j, Y', strtotime($evt['date'])); ?><br>
+                        ⏰ <?php echo date('H:i', strtotime($evt['time'])); ?>
+                      </td>
+                      <td>📍 <?php echo htmlspecialchars($evt['location']); ?></td>
+                      <td><span class="status-badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars(ucfirst($status)); ?></span></td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
     </main>
@@ -159,6 +290,7 @@ requireLogin();
   <!-- Scripts -->
   <script>
     window.currentUser = <?php echo json_encode(getCurrentUser()); ?>;
+    window.myEvents = <?php echo json_encode($my_events); ?>;
   </script>
   <script src="js/app.js"></script>
   <script src="js/dashboard.js"></script>

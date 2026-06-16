@@ -12,7 +12,7 @@ const db = {
     return Promise.resolve([]);
   },
   getMyEvents: () => {
-    return Promise.resolve([]);
+    return Promise.resolve(window.myEvents || []);
   },
   get: (key, defaultValue) => {
     try {
@@ -28,6 +28,11 @@ const db = {
     } catch(e) {}
   }
 };
+
+// Global authGuard mock to prevent mockup js ReferenceErrors
+async function authGuard() {
+  return true;
+}
 
 // Helper function to read cookie value
 function getCookie(name) {

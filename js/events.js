@@ -421,11 +421,11 @@ function toggleClubMembership(userId, clubId) {
 // 3. CREATE EVENT PAGE (Saves to MySQL)
 // ==========================================
 async function initCreateEventPage(user) {
-  // Guard access - only leaders or admins can create events
-  if (!user || (user.role !== 'leader' && user.role !== 'admin')) {
-    showToast('Permission denied. Only Club Leaders and Administrators can create events.', 'error');
+  // Guard access - only logged-in users can create events
+  if (!user) {
+    showToast('Permission denied. Please log in first.', 'error');
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'login.html';
     }, 2000);
     return;
   }

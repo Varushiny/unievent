@@ -26,13 +26,14 @@ if (empty($title) || empty($category) || empty($date) || empty($time) || empty($
 }
 
 $created_by = $_SESSION['student_id'];
-$status = 'pending';
+$status = ($_SESSION['role'] === 'admin') ? 'approved' : 'pending';
+$approved_by = ($_SESSION['role'] === 'admin') ? $_SESSION['student_id'] : null;
 $club_name = trim($_POST['club_name'] ?? 'Independent'); // Retrieve selected club or default to Independent
 $image_url = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'; // Default demo image
 $event_id = uniqid('evt-'); // Generate unique event ID
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO event (event_id, title, description, date, time, location, category, club_name, created_by, status, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO event (event_id, title, description, date, time, location, category, club_name, created_by, status, image_url, approved_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $event_id,
         $title, 
@@ -44,7 +45,8 @@ try {
         $club_name, 
         $created_by, 
         $status, 
-        $image_url
+        $image_url,
+        $approved_by
     ]);
 
     header("Location: ../dashboard.php?success=" . urlencode("Event submitted for approval!"));

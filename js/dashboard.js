@@ -16,10 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Setup Mobile Sidebar toggle
   setupMobileSidebar();
 
-  // Populate Dashboard statistics & contents
-  await populateDashboardStats(currentUser.id);
-  populateRecentActivities(currentUser.id);
-  await populateUpcomingEvents(currentUser.id);
+  // Setup Calendar
   await setupCalendar(currentUser.id);
 });
 

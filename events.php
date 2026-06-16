@@ -10,7 +10,7 @@ $events = $stmt->fetchAll();
 // Fetch user's registered events if logged in
 $registeredEventIds = [];
 if (isLoggedIn()) {
-    $stmt = $pdo->prepare("SELECT event_id FROM event_registration WHERE student_id = ?");
+    $stmt = $pdo->prepare("SELECT event_id FROM registrations WHERE student_id = ?");
     $stmt->execute([$_SESSION['student_id']]);
     $registeredEventIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
 }
@@ -181,17 +181,20 @@ if (isLoggedIn()) {
                     📍 <?php echo htmlspecialchars($evt['location']); ?>
                   </div>
                   
-                  <form action="actions/register_event_process.php" method="POST" style="margin: 0;">
-                    <input type="hidden" name="event_id" value="<?php echo $evt['event_id']; ?>">
-                    <?php if ($isPast): ?>
-                      <button type="button" class="btn btn-secondary" style="width: 100%;" disabled>Completed</button>
-                    <?php elseif ($isRegistered): ?>
-                      <!-- To cancel, they'll go to dashboard or we can post to cancel_registration here -->
-                      <button type="submit" name="action" value="cancel" class="btn btn-secondary" style="width: 100%; border-color: var(--success-color); color: var(--success-color);">✓ Registered (Click to Cancel)</button>
-                    <?php else: ?>
-                      <button type="submit" name="action" value="register" class="btn btn-primary" style="width: 100%;">Register Now</button>
-                    <?php endif; ?>
-                  </form>
+                  <?php if (isLoggedIn()): ?>
+                    <form action="actions/register_event_process.php" method="POST" style="margin: 0;">
+                      <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($evt['event_id']); ?>">
+                      <?php if ($isPast): ?>
+                        <button type="button" class="btn btn-secondary" style="width: 100%;" disabled>Completed</button>
+                      <?php elseif ($isRegistered): ?>
+                        <button type="button" class="btn btn-secondary" style="width: 100%; border-color: var(--success-color); color: var(--success-color);" disabled>✓ Registered</button>
+                      <?php else: ?>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Register Now</button>
+                      <?php endif; ?>
+                    </form>
+                  <?php else: ?>
+                    <a href="login.html" class="btn btn-primary" style="width: 100%; text-align: center; display: inline-block;">Login to Register</a>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
