@@ -1,3 +1,7 @@
+<?php
+require_once 'config/session.php';
+requireLogin();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +46,14 @@
             Create Event
           </a>
         </li>
+        <?php if ($_SESSION['role'] === 'admin'): ?>
+        <li class="sidebar-item">
+          <a href="admin_dashboard.php">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Admin Dashboard
+          </a>
+        </li>
+        <?php endif; ?>
         <li class="sidebar-item">
           <a href="profile.html">
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -145,6 +157,9 @@
   </div>
 
   <!-- Scripts -->
+  <script>
+    window.currentUser = <?php echo json_encode(getCurrentUser()); ?>;
+  </script>
   <script src="js/app.js"></script>
   <script src="js/dashboard.js"></script>
   <script>
@@ -177,11 +192,7 @@
         // Logout listener
         document.getElementById('sidebar-logout').addEventListener('click', (e) => {
           e.preventDefault();
-          db.setCurrentUser(null);
-          showToast('Logged out successfully', 'success');
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 1000);
+          window.location.href = 'actions/logout.php';
         });
       }
     });

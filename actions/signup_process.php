@@ -59,6 +59,9 @@ try {
     $_SESSION['faculty'] = $faculty;
     $_SESSION['department'] = $department;
 
+    // Set lightweight cookie for frontend static page sync
+    setcookie('student_name', $name, time() + 86400, '/');
+
     header("Location: ../dashboard.php?success=" . urlencode("Registration successful!"));
     exit;
 

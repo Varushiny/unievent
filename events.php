@@ -3,7 +3,7 @@ require_once 'config/session.php';
 require_once 'config/db.php';
 
 // Fetch approved events
-$stmt = $pdo->prepare("SELECT * FROM event WHERE status = 'approved' ORDER BY event_date ASC");
+$stmt = $pdo->prepare("SELECT * FROM event WHERE status = 'approved' ORDER BY date ASC");
 $stmt->execute();
 $events = $stmt->fetchAll();
 
@@ -155,9 +155,9 @@ if (isLoggedIn()) {
           <?php foreach ($events as $evt): ?>
             <?php 
               $isRegistered = in_array($evt['event_id'], $registeredEventIds);
-              $isPast = strtotime($evt['event_date']) < strtotime(date('Y-m-d'));
+              $isPast = strtotime($evt['date']) < strtotime(date('Y-m-d'));
             ?>
-            <div class="glass-card hover-lift event-card" data-title="<?php echo strtolower(htmlspecialchars($evt['title'])); ?>" data-venue="<?php echo strtolower(htmlspecialchars($evt['location'])); ?>" data-category="<?php echo htmlspecialchars($evt['category']); ?>" data-date="<?php echo htmlspecialchars($evt['event_date']); ?>">
+            <div class="glass-card hover-lift event-card" data-title="<?php echo strtolower(htmlspecialchars($evt['title'])); ?>" data-venue="<?php echo strtolower(htmlspecialchars($evt['location'])); ?>" data-category="<?php echo htmlspecialchars($evt['category']); ?>" data-date="<?php echo htmlspecialchars($evt['date']); ?>">
               <div style="height: 180px; position: relative; overflow: hidden;">
                 <img src="<?php echo htmlspecialchars($evt['image_url'] ?? 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'); ?>" alt="Event Image" style="width:100%; height:100%; object-fit:cover;">
                 <span style="position: absolute; top: 16px; right: 16px; background: var(--primary-gradient); color: var(--white); font-size: 0.75rem; font-weight:600; padding: 4px 12px; border-radius:50px;">
@@ -174,8 +174,8 @@ if (isLoggedIn()) {
                 </p>
                 <div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(226, 232, 240, 0.5); padding-top: 16px;">
                   <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>📅 <?php echo date('M j, Y', strtotime($evt['event_date'])); ?></span>
-                    <span>🕒 <?php echo date('H:i', strtotime($evt['event_time'])); ?></span>
+                    <span>📅 <?php echo date('M j, Y', strtotime($evt['date'])); ?></span>
+                    <span>🕒 <?php echo date('H:i', strtotime($evt['time'])); ?></span>
                   </div>
                   <div style="font-size: 0.8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                     📍 <?php echo htmlspecialchars($evt['location']); ?>

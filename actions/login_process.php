@@ -33,6 +33,9 @@ try {
         $_SESSION['faculty'] = $user['faculty'];
         $_SESSION['department'] = $user['department'];
 
+        // Set lightweight cookie for frontend static page sync
+        setcookie('student_name', $user['name'], time() + 86400, '/');
+
         header("Location: ../dashboard.php?success=" . urlencode("Welcome back, " . $user['name'] . "!"));
         exit;
     } else {

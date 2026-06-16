@@ -154,11 +154,7 @@
       // Expose logout button
       document.getElementById('sidebar-logout').addEventListener('click', (e) => {
         e.preventDefault();
-        db.setCurrentUser(null);
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1000);
+        window.location.href = 'actions/logout.php';
       });
     });
   </script>

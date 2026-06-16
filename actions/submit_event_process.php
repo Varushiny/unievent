@@ -27,12 +27,14 @@ if (empty($title) || empty($category) || empty($date) || empty($time) || empty($
 
 $created_by = $_SESSION['student_id'];
 $status = 'pending';
-$club_name = 'Independent'; // Defaulting for now as per plan
+$club_name = trim($_POST['club_name'] ?? 'Independent'); // Retrieve selected club or default to Independent
 $image_url = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'; // Default demo image
+$event_id = uniqid('evt-'); // Generate unique event ID
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO event (title, description, event_date, event_time, location, category, club_name, created_by, status, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO event (event_id, title, description, date, time, location, category, club_name, created_by, status, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
+        $event_id,
         $title, 
         $description, 
         $date, 

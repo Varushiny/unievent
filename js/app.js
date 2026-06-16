@@ -3,6 +3,45 @@
  * Handles strict client-side validation, toast notifications, UI toggles.
  */
 
+// Global mock/bridge database object for mockup JS backward compatibility
+const db = {
+  getCurrentUser: () => {
+    return window.currentUser || null;
+  },
+  getEvents: () => {
+    return Promise.resolve([]);
+  },
+  getMyEvents: () => {
+    return Promise.resolve([]);
+  },
+  get: (key, defaultValue) => {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : defaultValue;
+    } catch(e) {
+      return defaultValue;
+    }
+  },
+  set: (key, value) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch(e) {}
+  }
+};
+
+// Helper function to read cookie value
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+  return null;
+}
+
+// Helper to check if user is logged in via cookie
+function isUserLoggedIn() {
+  return getCookie('student_name') !== null;
+}
+
 // 1. Toast Notification System
 function showToast(message, type = 'success') {
   let container = document.querySelector('.toast-container');
@@ -51,6 +90,55 @@ function showToast(message, type = 'success') {
 
 // 2. Form Validation & URL Parameter Handling
 document.addEventListener('DOMContentLoaded', () => {
+  // Page check for create-event.html static guard
+  if (window.location.pathname.includes('create-event.html')) {
+    if (!isUserLoggedIn()) {
+      window.location.href = 'login.html?error=' + encodeURIComponent('Unauthorized. Please log in.');
+      return;
+    }
+  }
+
+  // Dynamic navbar sync based on student_name cookie
+  const navActions = document.querySelector('.nav-actions');
+  const navActionsMobile = document.querySelector('.nav-actions-mobile');
+  const studentName = getCookie('student_name');
+
+  if (navActions) {
+    if (studentName) {
+      navActions.innerHTML = `
+        <span style="margin-right: 15px; font-weight: 500;">Hi, ${studentName}</span>
+        <a href="actions/logout.php" class="btn btn-secondary">Logout</a>
+      `;
+      // Also inject Dashboard link in main navbar if logged in
+      const navLinks = document.querySelector('.nav-links');
+      if (navLinks && !navLinks.innerHTML.includes('dashboard.php')) {
+        const dashboardLi = document.createElement('li');
+        dashboardLi.className = 'nav-item';
+        dashboardLi.innerHTML = '<a href="dashboard.php">Dashboard</a>';
+        navLinks.appendChild(dashboardLi);
+      }
+    } else {
+      navActions.innerHTML = `
+        <a href="login.html" class="btn btn-secondary">Login</a>
+        <a href="signup.html" class="btn btn-primary">Sign Up</a>
+      `;
+    }
+  }
+
+  if (navActionsMobile) {
+    if (studentName) {
+      navActionsMobile.innerHTML = `
+        <a href="dashboard.php" class="btn btn-primary" style="margin-bottom: 10px; width: 100%;">Dashboard</a>
+        <a href="actions/logout.php" class="btn btn-secondary" style="width: 100%;">Logout</a>
+      `;
+    } else {
+      navActionsMobile.innerHTML = `
+        <a href="login.html" class="btn btn-secondary" style="margin-bottom: 10px; width: 100%;">Login</a>
+        <a href="signup.html" class="btn btn-primary" style="width: 100%;">Sign Up</a>
+      `;
+    }
+  }
+
   // Check URL parameters for errors/success from PHP redirects
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('error')) {
