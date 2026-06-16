@@ -1,6 +1,6 @@
 /**
- * UniEvent - Events, Clubs, Creation and Profile Scripting
- * Handles event filters and search, registrations, club management, profile modifications, and event creation validation.
+ * UniEvent - Events and Profile Scripting
+ * Handles event filters and search, registrations, profile modifications, and event creation validation.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,17 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventsPage(currentUser);
   }
 
-  // 2. Clubs Page Handler
-  if (document.getElementById('clubs-grid-container')) {
-    initClubsPage(currentUser);
-  }
-
-  // 3. Create Event Page Handler
+  // 2. Create Event Page Handler
   if (document.getElementById('create-event-form')) {
     initCreateEventPage(currentUser);
   }
 
-  // 4. Profile Page Handler
+  // 3. Profile Page Handler
   if (document.getElementById('profile-edit-form') || document.getElementById('profile-page-view')) {
     initProfilePage(currentUser);
   }
@@ -228,6 +223,9 @@ function openEventDetailsModal(eventId, user) {
     btnClass = 'btn-accent';
   }
 
+  const canEdit = user && (user.id === evt.authorId || user.role === 'admin');
+  let editBtnHTML = canEdit ? `<button class="btn btn-secondary" id="btn-edit-event-${evt.id}" style="margin-top: 12px; width: 100%;">✏️ Edit Event</button>` : '';
+
   const modalBody = `
     <div style="font-family: var(--font-main);">
       <div style="width: 100%; height: 200px; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px;">
@@ -242,10 +240,11 @@ function openEventDetailsModal(eventId, user) {
         <div>🕒 <strong>Time:</strong> ${evt.time}</div>
         <div style="grid-column: 1/-1;">📍 <strong>Venue:</strong> ${evt.venue}</div>
       </div>
+      ${editBtnHTML}
     </div>
   `;
 
-  modalHelper.create(
+  const modalId = modalHelper.create(
     'Event Details', 
     modalBody, 
     isPast ? null : (closeModal) => {
@@ -270,180 +269,120 @@ function openEventDetailsModal(eventId, user) {
       confirmBtn.className = `btn ${btnClass} modal-confirm`;
       confirmBtn.textContent = btnLabel;
     }
+    
+    // Attach edit button listener
+    const editBtn = document.getElementById(`btn-edit-event-${evt.id}`);
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        const m = document.getElementById(modalId);
+        if (m) {
+          m.classList.remove('show');
+          setTimeout(() => m.remove(), 400);
+        }
+        openEditEventModal(eventId, user);
+      });
+    }
+  }, 10);
+}
+
+// Edit Event Details modal
+function openEditEventModal(eventId, user) {
+  const events = db.get('uni_events', []);
+  const evt = events.find(e => e.id === eventId);
+  if (!evt) return;
+
+  const modalBody = `
+    <form id="edit-event-form-${evt.id}" style="font-family: var(--font-main);">
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Title</label>
+        <input type="text" id="edit-title" class="form-control" value="${evt.title}" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Date</label>
+        <input type="date" id="edit-date" class="form-control" value="${evt.date}" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Time</label>
+        <input type="time" id="edit-time" class="form-control" value="${evt.time}" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Venue</label>
+        <input type="text" id="edit-venue" class="form-control" value="${evt.venue}" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Description</label>
+        <textarea id="edit-desc" class="form-control" rows="4" required>${evt.description}</textarea>
+      </div>
+    </form>
+  `;
+
+  modalHelper.create(
+    'Edit Event',
+    modalBody,
+    (closeModal) => {
+      const title = document.getElementById('edit-title').value.trim();
+      const date = document.getElementById('edit-date').value;
+      const time = document.getElementById('edit-time').value;
+      const venue = document.getElementById('edit-venue').value.trim();
+      const description = document.getElementById('edit-desc').value.trim();
+
+      if (!title || !date || !time || !venue || !description) {
+        showToast('All fields are required', 'error');
+        return;
+      }
+
+      const eventsList = db.get('uni_events', []);
+      const index = eventsList.findIndex(e => e.id === eventId);
+      if (index > -1) {
+        eventsList[index] = { ...eventsList[index], title, date, time, venue, description };
+        db.set('uni_events', eventsList);
+        showToast('Event updated successfully!', 'success');
+        
+        let activities = db.get('uni_activities', []);
+        activities.push({
+          studentId: user.id,
+          type: 'event_edit',
+          text: `Edited event: ${title}`,
+          time: new Date().toISOString()
+        });
+        db.set('uni_activities', activities);
+
+        closeModal();
+        if (document.getElementById('events-grid-container')) {
+          initEventsPage(user);
+        }
+      }
+    }
+  );
+  
+  setTimeout(() => {
+    const confirmBtn = document.querySelector('.modal-confirm');
+    if (confirmBtn) {
+      confirmBtn.textContent = 'Save Changes';
+    }
   }, 10);
 }
 
 
 // ==========================================
-// 2. CLUBS EXPLORER PAGE
-// ==========================================
-function initClubsPage(user) {
-  const searchInput = document.getElementById('club-search');
-  const categoryFilters = document.querySelectorAll('.filter-tag');
-  const gridContainer = document.getElementById('clubs-grid-container');
-
-  let activeCategory = 'All';
-
-  const renderClubs = () => {
-    const clubs = db.get('uni_clubs', []);
-    const memberships = db.get('uni_memberships', []);
-    const searchText = searchInput ? searchInput.value.toLowerCase() : '';
-
-    let filteredClubs = clubs.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchText) || c.description.toLowerCase().includes(searchText);
-      const matchesCategory = activeCategory === 'All' || c.category.toLowerCase() === activeCategory.toLowerCase();
-      return matchesSearch && matchesCategory;
-    });
-
-    if (filteredClubs.length === 0) {
-      gridContainer.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--card-shadow); border: 1px solid rgba(226, 232, 240, 0.8);">
-          <div style="font-size: 2.5rem; margin-bottom: 16px;">🔍</div>
-          <h4>No Clubs Found</h4>
-        </div>
-      `;
-      return;
-    }
-
-    gridContainer.innerHTML = filteredClubs.map(c => {
-      const isMember = user ? memberships.some(m => m.studentId === user.id && m.clubId === c.id) : false;
-      const btnText = isMember ? 'Leave Club' : 'Join Club';
-      const btnClass = isMember ? 'btn-secondary' : 'btn-primary';
-
-      // count total members from memberships db
-      const clubMemberCount = memberships.filter(m => m.clubId === c.id).length + c.members;
-
-      return `
-        <div class="glass-card hover-lift club-card">
-          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-            <div style="width: 55px; height: 55px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
-              ${c.logo}
-            </div>
-            <div>
-              <h4 style="font-size: 1.1rem; line-height: 1.3;">${c.name}</h4>
-              <span style="font-size: 0.75rem; background: #E2E8F0; padding: 2px 8px; border-radius: 50px; color: var(--text-muted); font-weight:500;">
-                ${c.category}
-              </span>
-            </div>
-          </div>
-          <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1;">
-            ${c.description}
-          </p>
-          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(226, 232, 240, 0.5); padding-top: 16px; margin-top: auto;">
-            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-color);">
-              👥 ${clubMemberCount} Members
-            </span>
-            <button class="btn ${btnClass} btn-join-club" data-club-id="${c.id}" style="padding: 8px 16px; font-size: 0.85rem;">
-              ${btnText}
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // join button listeners
-    gridContainer.querySelectorAll('.btn-join-club').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        if (!user) {
-          showToast('Please log in to join clubs', 'error');
-          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
-          return;
-        }
-        const clubId = e.target.getAttribute('data-club-id');
-        toggleClubMembership(user.id, clubId);
-      });
-    });
-  };
-
-  if (searchInput) searchInput.addEventListener('input', renderClubs);
-  categoryFilters.forEach(tag => {
-    tag.addEventListener('click', (e) => {
-      categoryFilters.forEach(t => t.classList.remove('active'));
-      e.target.classList.add('active');
-      activeCategory = e.target.getAttribute('data-category');
-      renderClubs();
-    });
-  });
-
-  renderClubs();
-}
-
-// Toggle Club Membership
-function toggleClubMembership(userId, clubId) {
-  let memberships = db.get('uni_memberships', []);
-  const clubs = db.get('uni_clubs', []);
-  const club = clubs.find(c => c.id === clubId);
-  if (!club) return;
-
-  const index = memberships.findIndex(m => m.studentId === userId && m.clubId === clubId);
-  let activities = db.get('uni_activities', []);
-
-  if (index > -1) {
-    // Leave
-    memberships.splice(index, 1);
-    db.set('uni_memberships', memberships);
-
-    activities.push({
-      studentId: userId,
-      type: 'club_leave',
-      text: `Left ${club.name}`,
-      time: new Date().toISOString()
-    });
-    db.set('uni_activities', activities);
-
-    showToast(`You left the ${club.name}`, 'error');
-  } else {
-    // Join
-    memberships.push({
-      studentId: userId,
-      clubId: clubId,
-      joinedAt: new Date().toISOString().split('T')[0]
-    });
-    db.set('uni_memberships', memberships);
-
-    activities.push({
-      studentId: userId,
-      type: 'club_join',
-      text: `Joined ${club.name}`,
-      time: new Date().toISOString()
-    });
-    db.set('uni_activities', activities);
-
-    showToast(`Welcome! You are now a member of ${club.name}`, 'success');
-  }
-
-  // Refresh
-  initClubsPage(db.getCurrentUser());
-}
-
-
-// ==========================================
-// 3. CREATE EVENT PAGE
+// 2. CREATE EVENT PAGE
 // ==========================================
 function initCreateEventPage(user) {
-  // Guard access - only leaders or admins can create events
-  if (!user || (user.role !== 'leader' && user.role !== 'admin')) {
-    showToast('Permission denied. Only Club Leaders and Administrators can create events.', 'error');
+  // Guard access - any registered person can create events
+  if (!user) {
+    showToast('Permission denied. You must log in to create events.', 'error');
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'login.html';
     }, 2000);
     return;
   }
 
   const form = document.getElementById('create-event-form');
-  const clubsSelect = document.getElementById('event-club-select');
-
-  // Populate clubs dropdown
-  const clubs = db.get('uni_clubs', []);
-  if (clubsSelect) {
-    clubsSelect.innerHTML = clubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const title = document.getElementById('event-title').value.trim();
-    const clubId = clubsSelect.value;
     const date = document.getElementById('event-date').value;
     const time = document.getElementById('event-time').value;
     const venue = document.getElementById('event-venue').value.trim();
@@ -463,20 +402,18 @@ function initCreateEventPage(user) {
       return;
     }
 
-    const club = clubs.find(c => c.id === clubId);
-    const clubName = club ? club.name : 'Independent';
-
     const newEvent = {
       id: 'evt-' + Date.now(),
       title,
-      clubId,
-      clubName,
+      clubId: '',
+      clubName: 'Independent',
       date,
       time,
       venue,
       category,
       description,
-      image
+      image,
+      authorId: user.id
     };
 
     // Save
@@ -498,14 +435,14 @@ function initCreateEventPage(user) {
     form.reset();
 
     setTimeout(() => {
-      window.location.href = 'events.html';
+      window.location.href = 'index.html';
     }, 1500);
   });
 }
 
 
 // ==========================================
-// 4. PROFILE PAGE
+// 3. PROFILE PAGE
 // ==========================================
 function initProfilePage(user) {
   authGuard();
@@ -576,12 +513,9 @@ function initProfilePage(user) {
 
 function populateProfileLists(userId) {
   const eventsContainer = document.getElementById('profile-events-list');
-  const clubsContainer = document.getElementById('profile-clubs-list');
 
   const registrations = db.get('uni_registrations', []);
-  const memberships = db.get('uni_memberships', []);
   const events = db.get('uni_events', []);
-  const clubs = db.get('uni_clubs', []);
 
   // Events list drawing
   if (eventsContainer) {
@@ -591,7 +525,7 @@ function populateProfileLists(userId) {
     if (userEvents.length === 0) {
       eventsContainer.innerHTML = `
         <div style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">
-          No events registered yet. Explore the <a href="events.html" style="color: var(--secondary-color); font-weight:500;">Events page</a> to sign up!
+          No events registered yet. Explore the <a href="index.html" style="color: var(--secondary-color); font-weight:500;">Events page</a> to sign up!
         </div>
       `;
     } else {
@@ -611,43 +545,6 @@ function populateProfileLists(userId) {
         btn.addEventListener('click', (e) => {
           const eventId = e.target.getAttribute('data-event-id');
           toggleEventRegistration(userId, eventId);
-          populateProfileLists(userId); // redraw
-        });
-      });
-    }
-  }
-
-  // Clubs list drawing
-  if (clubsContainer) {
-    const userClubs = memberships.filter(m => m.studentId === userId);
-    const joinedClubs = clubs.filter(c => userClubs.some(m => m.clubId === c.id));
-
-    if (joinedClubs.length === 0) {
-      clubsContainer.innerHTML = `
-        <div style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">
-          No clubs joined yet. Check out the <a href="clubs.html" style="color: var(--secondary-color); font-weight:500;">Clubs directory</a>!
-        </div>
-      `;
-    } else {
-      clubsContainer.innerHTML = joinedClubs.map(c => `
-        <div class="glass-card profile-list-item">
-          <div style="display:flex; align-items:center; gap: 12px;">
-            <div style="font-size: 1.5rem;">${c.logo}</div>
-            <div>
-              <div style="font-weight:600; font-size: 0.95rem;">${c.name}</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">${c.category} Category</div>
-            </div>
-          </div>
-          <button class="btn btn-secondary btn-leave-profile-club" data-club-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem;">
-            Leave Club
-          </button>
-        </div>
-      `).join('');
-
-      clubsContainer.querySelectorAll('.btn-leave-profile-club').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const clubId = e.target.getAttribute('data-club-id');
-          toggleClubMembership(userId, clubId);
           populateProfileLists(userId); // redraw
         });
       });

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up - UniEvent</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/animations.css">
   <style>
     body {
       min-height: 100vh;
@@ -18,19 +17,7 @@
   </style>
 </head>
 <body>
-  <!-- Page Loader -->
-  <div class="page-loader">
-    <div class="spinner"></div>
-  </div>
 
-  <!-- Particle background canvas -->
-  <canvas id="particles-canvas"></canvas>
-  <div class="bg-pattern-fade"></div>
-
-  <!-- Background Orbs -->
-  <div class="floating-orb orb-1"></div>
-  <div class="floating-orb orb-2"></div>
-  <div class="floating-orb orb-3"></div>
 
   <!-- Top Navigation Link -->
   <div style="position: absolute; top: 24px; left: 24px;">
@@ -40,7 +27,7 @@
   <!-- Signup Card Container -->
   <div class="glass-card fade-in" style="max-width: 580px; width: 100%; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -10px rgba(30, 64, 175, 0.1);">
     <h2 style="font-size: 1.75rem; margin-bottom: 8px; font-weight: 700;">Join UniEvent</h2>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px;">Create your profile to join clubs and attend campus events</p>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px;">Create your profile to attend campus events</p>
 
     <!-- Sign Up Form -->
     <form id="signup-form">
@@ -64,10 +51,10 @@
         <div class="form-group">
           <label for="signup-faculty" class="form-label">Faculty</label>
           <select id="signup-faculty" class="form-control" style="cursor: pointer;">
-            <option value="Engineering">Engineering</option>
+            <option value="Engineering">Management</option>
             <option value="Science">Science</option>
-            <option value="Business">Business Administration</option>
-            <option value="Arts">Humanities & Arts</option>
+            <option value="Business">Computing and Technology</option>
+            <option value="Arts">Humanities</option>
           </select>
         </div>
         <div class="form-group">
@@ -87,7 +74,7 @@
         </div>
       </div>
 
-      <!-- Password Strength Indicator -->
+      <!-- Password Strength Indicator 
       <div style="text-align: left; margin-top: -12px; margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; font-weight: 500;">
           <span style="color: var(--text-muted);">Password Strength:</span>
@@ -96,9 +83,9 @@
         <div style="background: rgba(226, 232, 240, 0.8); border-radius: 3px; height: 6px; width: 100%;">
           <div id="strength-indicator" class="strength-bar" style="width: 0%; background-color: var(--danger-color);"></div>
         </div>
-      </div>
+      </div>-->
 
-      <button type="submit" class="btn btn-primary btn-animate" style="width: 100%; margin-bottom: 24px; font-weight: 600;">
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 24px; font-weight: 600;">
         Create Account
       </button>
 
@@ -120,47 +107,7 @@
       const form = document.getElementById('signup-form');
       const passInput = document.getElementById('signup-pass');
       const confirmInput = document.getElementById('signup-confirm-pass');
-      const strengthLabel = document.getElementById('strength-label');
-      const strengthBar = document.getElementById('strength-indicator');
 
-      // Password Strength live monitoring
-      passInput.addEventListener('input', () => {
-        const val = passInput.value;
-        let score = 0;
-        
-        if (val.length >= 6) score++;
-        if (val.length >= 8) score++;
-        if (/[A-Z]/.test(val)) score++;
-        if (/[0-9]/.test(val)) score++;
-        if (/[^A-Za-z0-9]/.test(val)) score++;
-
-        let width = '0%';
-        let color = 'var(--danger-color)';
-        let label = 'Too Short';
-
-        if (val.length > 0) {
-          if (score <= 1) {
-            width = '20%';
-            color = 'var(--danger-color)';
-            label = 'Weak';
-          } else if (score <= 3) {
-            width = '60%';
-            color = 'var(--warning-color)';
-            label = 'Moderate';
-          } else {
-            width = '100%';
-            color = 'var(--success-color)';
-            label = 'Strong';
-          }
-        }
-
-        strengthBar.style.width = width;
-        strengthBar.style.backgroundColor = color;
-        strengthLabel.innerText = label;
-        strengthLabel.style.color = color;
-      });
-
-      // Submit Form
       form.addEventListener('submit', (e) => {
         e.preventDefault();
 
@@ -214,7 +161,7 @@
         let activities = db.get('uni_activities', []);
         activities.push({
           studentId: newUser.id,
-          type: 'club_join', // generic joining activity
+          type: 'account_create', // account creation activity
           text: `Created user profile and joined UniEvent`,
           time: new Date().toISOString()
         });
@@ -230,3 +177,5 @@
   </script>
 </body>
 </html>
+
+

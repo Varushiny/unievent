@@ -4,13 +4,6 @@
  */
 
 // 1. Mock Database Initializer
-const DEFAULT_CLUBS = [
-  { id: 'club-1', name: 'Coding Club', category: 'Academic', description: 'Explore software development, competitive programming, and cool hacks.', logo: '💻', members: 154 },
-  { id: 'club-2', name: 'Music & Arts Society', category: 'Cultural', description: 'Bringing creative souls together for jam sessions, theater, and concerts.', logo: '🎨', members: 89 },
-  { id: 'club-3', name: 'Sports Varsity Club', category: 'Athletics', description: 'Representing the university in basketball, football, running, and track.', logo: '🏆', members: 120 },
-  { id: 'club-4', name: 'Debating Society', category: 'Academic', description: 'Fostering critical thinking, quick wit, and persuasive speech on global issues.', logo: '🗣️', members: 45 }
-];
-
 const DEFAULT_EVENTS = [
   { id: 'evt-1', title: 'UniHack 2026', clubId: 'club-1', clubName: 'Coding Club', date: '2026-06-25', time: '09:00', venue: 'Campus Innovation Hub', category: 'Academic', description: 'A 24-hour hackathon where students build prototypes to solve real-world problems. Great prizes and food are provided!', image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=60' },
   { id: 'evt-2', title: 'Spring Jam Concert', clubId: 'club-2', clubName: 'Music & Arts Society', date: '2026-06-30', time: '18:00', venue: 'Open Air Theater', category: 'Cultural', description: 'A musical night featuring live student bands, art displays, food trucks, and absolute fun under the stars.', image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60' },
@@ -19,14 +12,9 @@ const DEFAULT_EVENTS = [
 ];
 
 const DEFAULT_USERS = [
-  { id: 'usr-1', name: 'Alex Mercer', studentId: 'ST-2024-001', email: 'student@unievent.com', password: 'password123', faculty: 'Engineering', department: 'Computer Science', role: 'student', avatar: '' },
-  { id: 'usr-2', name: 'Dr. Sarah Connor', studentId: 'FA-2021-042', email: 'leader@unievent.com', password: 'password123', faculty: 'Science', department: 'Mathematics', role: 'leader', avatar: '' },
-  { id: 'usr-3', name: 'Admin User', studentId: 'AD-2020-001', email: 'admin@unievent.com', password: 'password123', faculty: 'Administration', department: 'Operations', role: 'admin', avatar: '' }
-];
-
-const DEFAULT_MEMBERSHIPS = [
-  { clubId: 'club-1', studentId: 'usr-1', joinedAt: '2026-05-10' },
-  { clubId: 'club-2', studentId: 'usr-1', joinedAt: '2026-05-18' }
+  { id: 'usr-1', name: 'Alex Mercer', studentId: 'EC/2022/049', email: 'student@unievent.com', password: 'password123', faculty: 'Engineering', department: 'Computer Science', role: 'student', avatar: '' },
+  { id: 'usr-2', name: 'Dr. Sarah Connor', studentId: 'IT/2021/010', email: 'leader@unievent.com', password: 'password123', faculty: 'Science', department: 'Mathematics', role: 'leader', avatar: '' },
+  { id: 'usr-3', name: 'Admin User', studentId: 'AD/2020/001', email: 'admin@unievent.com', password: 'password123', faculty: 'Administration', department: 'Operations', role: 'admin', avatar: '' }
 ];
 
 const DEFAULT_REGISTRATIONS = [
@@ -34,9 +22,7 @@ const DEFAULT_REGISTRATIONS = [
 ];
 
 const DEFAULT_ACTIVITIES = [
-  { studentId: 'usr-1', type: 'club_join', text: 'Joined the Coding Club', time: '2026-05-10T11:24:00Z' },
-  { studentId: 'usr-1', type: 'event_register', text: 'Registered for UniHack 2026', time: '2026-05-12T14:35:00Z' },
-  { studentId: 'usr-1', type: 'club_join', text: 'Joined the Music & Arts Society', time: '2026-05-18T16:05:00Z' }
+  { studentId: 'usr-1', type: 'event_register', text: 'Registered for UniHack 2026', time: '2026-05-12T14:35:00Z' }
 ];
 
 // Helper to interact with Local Storage
@@ -59,9 +45,7 @@ const db = {
   },
   init: () => {
     if (!localStorage.getItem('uni_users')) db.set('uni_users', DEFAULT_USERS);
-    if (!localStorage.getItem('uni_clubs')) db.set('uni_clubs', DEFAULT_CLUBS);
     if (!localStorage.getItem('uni_events')) db.set('uni_events', DEFAULT_EVENTS);
-    if (!localStorage.getItem('uni_memberships')) db.set('uni_memberships', DEFAULT_MEMBERSHIPS);
     if (!localStorage.getItem('uni_registrations')) db.set('uni_registrations', DEFAULT_REGISTRATIONS);
     if (!localStorage.getItem('uni_activities')) db.set('uni_activities', DEFAULT_ACTIVITIES);
     if (!localStorage.getItem('uni_current_user')) db.set('uni_current_user', null);
@@ -334,8 +318,8 @@ function updateNavbarAuthUI() {
   } else {
     // Show standard Login / Signup
     const guestUI = `
-      <a href="login.html" class="btn btn-secondary btn-animate">Login</a>
-      <a href="signup.html" class="btn btn-primary btn-animate">Sign Up</a>
+      <a href="login.html" class="btn btn-secondary">Login</a>
+      <a href="signup.html" class="btn btn-primary">Sign Up</a>
     `;
 
     container.innerHTML = guestUI;
@@ -417,3 +401,4 @@ function initParticles() {
     height = canvas.height = window.innerHeight;
   });
 }
+

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   populateDashboardStats(currentUser.id);
   populateRecentActivities(currentUser.id);
   populateUpcomingEvents(currentUser.id);
-  setupCalendar(currentUser.id);
+  
 });
 
 // Update profile display in sidebar
@@ -68,18 +68,13 @@ function setupMobileSidebar() {
 // Populate statistics cards
 function populateDashboardStats(userId) {
   const registrations = db.get('uni_registrations', []);
-  const memberships = db.get('uni_memberships', []);
   const events = db.get('uni_events', []);
 
   // Filter for user
   const userRegs = registrations.filter(r => r.studentId === userId);
-  const userClubs = memberships.filter(m => m.studentId === userId);
   
   const regCountEl = document.getElementById('stat-regs-count');
   if (regCountEl) regCountEl.textContent = userRegs.length;
-
-  const clubCountEl = document.getElementById('stat-clubs-count');
-  if (clubCountEl) clubCountEl.textContent = userClubs.length;
 
   const upcomingCountEl = document.getElementById('stat-upcoming-count');
   if (upcomingCountEl) {
@@ -114,10 +109,7 @@ function populateRecentActivities(userId) {
     let icon = '🔔';
     let colorClass = '';
     
-    if (act.type === 'club_join') {
-      icon = '👥';
-      colorClass = 'marker-green';
-    } else if (act.type === 'event_register') {
+    if (act.type === 'event_register') {
       icon = '📅';
       colorClass = 'marker-amber';
     } else if (act.type === 'event_create') {
@@ -241,7 +233,7 @@ function cancelRegistration(userId, eventId) {
   populateDashboardStats(userId);
   populateRecentActivities(userId);
   populateUpcomingEvents(userId);
-  setupCalendar(userId);
+  
 }
 
 // Build interactive calendar view
