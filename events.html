@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Events Directory - UniEvent</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/animations.css">
   <style>
     /* Custom Styling for Search & Filter Section */
     .filter-section {
@@ -58,19 +57,7 @@
   </style>
 </head>
 <body>
-  <!-- Page Loader -->
-  <div class="page-loader">
-    <div class="spinner"></div>
-  </div>
 
-  <!-- Particle background canvas -->
-  <canvas id="particles-canvas"></canvas>
-  <div class="bg-pattern-fade"></div>
-
-  <!-- Background Orbs -->
-  <div class="floating-orb orb-1"></div>
-  <div class="floating-orb orb-2"></div>
-  <div class="floating-orb orb-3"></div>
 
   <!-- Sticky Navbar -->
   <nav class="navbar" id="main-navbar">
@@ -82,7 +69,7 @@
       <ul class="nav-links">
         <li class="nav-item"><a href="index.html">Home</a></li>
         <li class="nav-item active"><a href="events.html">Events</a></li>
-        <li class="nav-item"><a href="clubs.html">Clubs</a></li>
+
         <li class="nav-actions-mobile"></li>
       </ul>
 
@@ -113,7 +100,7 @@
       <div class="filter-section reveal">
         <div class="search-row">
           <div style="position: relative;">
-            <input type="text" id="event-search" class="form-control" placeholder="Search events by title, club or location..." style="padding-left: 44px;">
+            <input type="text" id="event-search" class="form-control" placeholder="Search events by title, venue or location..." style="padding-left: 44px;">
             <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-muted);">🔍</span>
           </div>
           <div>
@@ -133,7 +120,7 @@
       </div>
 
       <!-- Events Catalog Grid -->
-      <div class="dashboard-events-grid reveal" id="events-grid-container">
+      <div class="dashboard-events-grid" id="events-grid-container">
         <!-- Injected dynamically via js/events.js -->
       </div>
 
@@ -146,7 +133,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <h3>🏫 UniEvent</h3>
-          <p>Connecting campus communities, clubs, and students through modern events management solutions.</p>
+          <p>Connecting campus communities and students through modern events management solutions.</p>
         </div>
 
         <div class="footer-links-col">
@@ -154,7 +141,7 @@
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="events.html">Events Directory</a></li>
-            <li><a href="clubs.html">Clubs Directory</a></li>
+
           </ul>
         </div>
 
@@ -185,3 +172,5 @@
   <script src="js/events.js"></script>
 </body>
 </html>
+
+

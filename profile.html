@@ -6,17 +6,8 @@
   <title>Student Profile - UniEvent</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
-  <!-- Page Loader -->
-  <div class="page-loader">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Particle background canvas -->
-  <canvas id="particles-canvas"></canvas>
-  <div class="bg-pattern-fade"></div>
 
   <div class="dashboard-layout">
     
@@ -43,19 +34,9 @@
             Dashboard
           </a>
         </li>
-        <li class="sidebar-item">
-          <a href="events.html">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Explore Events
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="clubs.html">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Active Clubs
-          </a>
-        </li>
-        <li class="sidebar-item" id="create-event-sidebar-item" style="display: none;">
+
+
+        <li class="sidebar-item" id="create-event-sidebar-item">
           <a href="create-event.html">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Create Event
@@ -97,21 +78,7 @@
         </div>
       </header>
 
-      <!-- Profile Cover Banner & Profile Meta Card -->
-      <section>
-        <div class="profile-cover"></div>
-        <div class="profile-header-card">
-          <div class="profile-avatar-container">
-            <div class="user-avatar" style="width:100%; height:100%; border-radius:0; border:none; font-size: 3rem;">
-              <!-- Initial letter dynamic -->
-            </div>
-          </div>
-          <div class="profile-meta">
-            <h3 id="profile-title-name">Student Name</h3>
-            <p id="profile-title-role">Student</p>
-          </div>
-        </div>
-      </section>
+
 
       <!-- Profile Form and List Details Grid -->
       <div class="dashboard-grid">
@@ -159,30 +126,24 @@
               </div>
 
               <div style="display:flex; justify-content:flex-end; margin-top:24px; border-top:1px solid #E2E8F0; padding-top:20px;">
-                <button type="submit" class="btn btn-primary btn-animate">Save Profile</button>
+                <button type="submit" class="btn btn-primary">Save Profile</button>
               </div>
 
             </form>
           </div>
         </div>
 
-        <!-- Right Side: Lists details (events/clubs enrolled) -->
+        <!-- Right Side: Lists details (events enrolled) --
         <div>
-          <!-- Enrolled Events -->
+          <!-- Enrolled Events --
           <div class="section-header">
             <h3>My Registrations</h3>
           </div>
           <div id="profile-events-list">
-            <!-- Injected dynamically via js/events.js -->
-          </div>
+            <!-- Injected dynamically via js/events.js --
+          </div>-->
 
-          <!-- Enrolled Clubs -->
-          <div class="section-header" style="margin-top: 32px;">
-            <h3>Joined Clubs</h3>
-          </div>
-          <div id="profile-clubs-list">
-            <!-- Injected dynamically via js/events.js -->
-          </div>
+
         </div>
 
       </div>
@@ -197,14 +158,7 @@
   <script src="js/events.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const user = db.getCurrentUser();
-      if (user) {
-        // Expose create event if admin or leader
-        if (user.role === 'leader' || user.role === 'admin') {
-          const createItem = document.getElementById('create-event-sidebar-item');
-          if (createItem) createItem.style.display = 'block';
-        }
-      }
+      // No role-check needed — all logged-in users can create events
 
       // Logout handler
       document.getElementById('sidebar-logout').addEventListener('click', (e) => {
@@ -219,3 +173,5 @@
   </script>
 </body>
 </html>
+
+
