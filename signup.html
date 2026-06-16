@@ -30,27 +30,30 @@
     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px;">Create your profile to attend campus events</p>
 
     <!-- Sign Up Form -->
-    <form id="signup-form">
+    <form id="signup-form" action="actions/signup_process.php" method="POST">
+      <!-- Error Message Placeholder -->
+      <div id="signup-error" style="color: var(--danger-color); font-size: 0.9rem; margin-bottom: 16px; display: none;"></div>
+      
       <div class="form-row">
         <div class="form-group">
           <label for="signup-name" class="form-label">Full Name</label>
-          <input type="text" id="signup-name" class="form-control" placeholder="Alex Mercer" required>
+          <input type="text" id="signup-name" name="name" class="form-control" placeholder="Alex Mercer" required>
         </div>
         <div class="form-group">
           <label for="signup-id" class="form-label">Student ID</label>
-          <input type="text" id="signup-id" class="form-control" placeholder="ST-2026-999" required>
+          <input type="text" id="signup-id" name="student_id" class="form-control" placeholder="ST-2026-999" required>
         </div>
       </div>
 
       <div class="form-group">
         <label for="signup-email" class="form-label">Email Address</label>
-        <input type="email" id="signup-email" class="form-control" placeholder="name@unievent.com" required>
+        <input type="email" id="signup-email" name="email" class="form-control" placeholder="name@unievent.com" required>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="signup-faculty" class="form-label">Faculty</label>
-          <select id="signup-faculty" class="form-control" style="cursor: pointer;">
+          <select id="signup-faculty" name="faculty" class="form-control" style="cursor: pointer;">
             <option value="Engineering">Management</option>
             <option value="Science">Science</option>
             <option value="Business">Computing and Technology</option>
@@ -59,31 +62,20 @@
         </div>
         <div class="form-group">
           <label for="signup-dept" class="form-label">Department</label>
-          <input type="text" id="signup-dept" class="form-control" placeholder="Computer Science" required>
+          <input type="text" id="signup-dept" name="department" class="form-control" placeholder="Computer Science" required>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="signup-pass" class="form-label">Password</label>
-          <input type="password" id="signup-pass" class="form-control" placeholder="••••••••" required>
+          <input type="password" id="signup-pass" name="password" class="form-control" placeholder="••••••••" required>
         </div>
         <div class="form-group">
           <label for="signup-confirm-pass" class="form-label">Confirm Password</label>
-          <input type="password" id="signup-confirm-pass" class="form-control" placeholder="••••••••" required>
+          <input type="password" id="signup-confirm-pass" name="password_confirm" class="form-control" placeholder="••••••••" required>
         </div>
       </div>
-
-      <!-- Password Strength Indicator 
-      <div style="text-align: left; margin-top: -12px; margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; font-weight: 500;">
-          <span style="color: var(--text-muted);">Password Strength:</span>
-          <span id="strength-label" style="color: var(--danger-color);">Too Short</span>
-        </div>
-        <div style="background: rgba(226, 232, 240, 0.8); border-radius: 3px; height: 6px; width: 100%;">
-          <div id="strength-indicator" class="strength-bar" style="width: 0%; background-color: var(--danger-color);"></div>
-        </div>
-      </div>-->
 
       <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 24px; font-weight: 600;">
         Create Account
@@ -96,85 +88,6 @@
   </div>
 
   <script src="js/app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Redirect if logged in
-      if (db.getCurrentUser()) {
-        window.location.href = 'dashboard.html';
-        return;
-      }
-
-      const form = document.getElementById('signup-form');
-      const passInput = document.getElementById('signup-pass');
-      const confirmInput = document.getElementById('signup-confirm-pass');
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById('signup-name').value.trim();
-        const id = document.getElementById('signup-id').value.trim();
-        const email = document.getElementById('signup-email').value.trim();
-        const faculty = document.getElementById('signup-faculty').value;
-        const dept = document.getElementById('signup-dept').value.trim();
-        const pass = passInput.value;
-        const confirmPass = confirmInput.value;
-
-        if (pass !== confirmPass) {
-          showToast('Passwords do not match!', 'error');
-          return;
-        }
-
-        if (pass.length < 6) {
-          showToast('Password must be at least 6 characters long', 'error');
-          return;
-        }
-
-        // Check exists
-        let users = db.get('uni_users', []);
-        const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-
-        if (exists) {
-          showToast('User email already registered', 'error');
-          return;
-        }
-
-        // Create user
-        const newUser = {
-          id: 'usr-' + Date.now(),
-          name,
-          studentId: id,
-          email,
-          password: pass,
-          faculty,
-          department: dept,
-          role: 'student', // default signed up role
-          avatar: ''
-        };
-
-        users.push(newUser);
-        db.set('uni_users', users);
-        
-        // Log in
-        db.setCurrentUser(newUser);
-
-        // Add activity
-        let activities = db.get('uni_activities', []);
-        activities.push({
-          studentId: newUser.id,
-          type: 'account_create', // account creation activity
-          text: `Created user profile and joined UniEvent`,
-          time: new Date().toISOString()
-        });
-        db.set('uni_activities', activities);
-
-        showToast('Registration successful! Redirecting...', 'success');
-
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1500);
-      });
-    });
-  </script>
 </body>
 </html>
 

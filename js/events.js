@@ -1,31 +1,42 @@
 /**
- * UniEvent - Events and Profile Scripting
- * Handles event filters and search, registrations, profile modifications, and event creation validation.
+ * UniEvent - Events, Clubs, Creation and Profile Scripting
+ * Refactored to handle asynchronous interactions with PHP APIs.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-  const currentUser = db.getCurrentUser();
+// Helper to format date string
+function formatDateString(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const currentUser = await db.getCurrentUser();
 
   // 1. Events Page Handler
   if (document.getElementById('events-grid-container')) {
-    initEventsPage(currentUser);
+    await initEventsPage(currentUser);
   }
 
-  // 2. Create Event Page Handler
+  // 2. Clubs Page Handler
+  if (document.getElementById('clubs-grid-container')) {
+    initClubsPage(currentUser);
+  }
+
+  // 3. Create Event Page Handler
   if (document.getElementById('create-event-form')) {
-    initCreateEventPage(currentUser);
+    await initCreateEventPage(currentUser);
   }
 
-  // 3. Profile Page Handler
+  // 4. Profile Page Handler
   if (document.getElementById('profile-edit-form') || document.getElementById('profile-page-view')) {
-    initProfilePage(currentUser);
+    await initProfilePage(currentUser);
   }
 });
 
 // ==========================================
 // 1. EVENTS EXPLORER PAGE
 // ==========================================
-function initEventsPage(user) {
+async function initEventsPage(user) {
   const searchInput = document.getElementById('event-search');
   const categoryFilters = document.querySelectorAll('.filter-tag');
   const dateFilter = document.getElementById('event-date-filter');
@@ -33,28 +44,29 @@ function initEventsPage(user) {
 
   let activeCategory = 'All';
 
-  const renderEvents = () => {
-    const events = db.get('uni_events', []);
-    const registrations = db.get('uni_registrations', []);
-    const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+  const renderEvents = async () => {
+    // Show loading state
+    gridContainer.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 48px;">
+        <div style="font-size: 2rem; margin-bottom: 16px;">⏳</div>
+        <h4>Loading Events...</h4>
+      </div>
+    `;
+
+    const searchText = searchInput ? searchInput.value.trim() : '';
     const selectedDate = dateFilter ? dateFilter.value : '';
 
-    let filteredEvents = events.filter(evt => {
-      // Search matches
-      const matchesSearch = evt.title.toLowerCase().includes(searchText) || 
-                            evt.clubName.toLowerCase().includes(searchText) || 
-                            evt.venue.toLowerCase().includes(searchText);
-      
-      // Category matches
-      const matchesCategory = activeCategory === 'All' || evt.category.toLowerCase() === activeCategory.toLowerCase();
-
-      // Date matches
-      const matchesDate = !selectedDate || evt.date === selectedDate;
-
-      return matchesSearch && matchesCategory && matchesDate;
+    // Fetch live data from PHP Backend API
+    const events = await db.getEvents({
+      search: searchText,
+      category: activeCategory,
+      date: selectedDate
     });
 
-    if (filteredEvents.length === 0) {
+    const registeredEvents = user ? await db.getMyEvents() : [];
+    const registeredEventIds = registeredEvents.map(e => e.id);
+
+    if (events.length === 0) {
       gridContainer.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--card-shadow); border: 1px solid rgba(226, 232, 240, 0.8);">
           <div style="font-size: 2.5rem; margin-bottom: 16px;">🔍</div>
@@ -65,8 +77,8 @@ function initEventsPage(user) {
       return;
     }
 
-    gridContainer.innerHTML = filteredEvents.map(evt => {
-      const isRegistered = user ? registrations.some(r => r.studentId === user.id && r.eventId === evt.id) : false;
+    gridContainer.innerHTML = events.map(evt => {
+      const isRegistered = user ? registeredEventIds.includes(evt.id) : false;
       const today = new Date().toISOString().split('T')[0];
       const isPast = evt.date < today;
 
@@ -112,7 +124,7 @@ function initEventsPage(user) {
 
     // Register button togglers
     gridContainer.querySelectorAll('.btn-register-toggle').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         if (!user) {
           showToast('Please log in to register for events', 'error');
           setTimeout(() => {
@@ -121,15 +133,15 @@ function initEventsPage(user) {
           return;
         }
         const eventId = e.target.getAttribute('data-event-id');
-        toggleEventRegistration(user.id, eventId);
+        await toggleEventRegistration(user.id, eventId);
       });
     });
 
     // Details modal trigger
     gridContainer.querySelectorAll('.event-title-click').forEach(title => {
-      title.addEventListener('click', (e) => {
+      title.addEventListener('click', async (e) => {
         const eventId = e.target.getAttribute('data-event-id');
-        openEventDetailsModal(eventId, user);
+        await openEventDetailsModal(eventId, user);
       });
     });
   };
@@ -148,68 +160,62 @@ function initEventsPage(user) {
   });
 
   // Initial draw
-  renderEvents();
+  await renderEvents();
 }
 
 // Toggle Event Enrollment
-function toggleEventRegistration(userId, eventId) {
-  let registrations = db.get('uni_registrations', []);
-  const events = db.get('uni_events', []);
-  const event = events.find(e => e.id === eventId);
-  if (!event) return;
-
-  const isRegisteredIndex = registrations.findIndex(r => r.studentId === userId && r.eventId === eventId);
-
+async function toggleEventRegistration(userId, eventId) {
+  const registeredEvents = await db.getMyEvents();
+  const isRegistered = registeredEvents.some(e => e.id === eventId);
   let activities = db.get('uni_activities', []);
 
-  if (isRegisteredIndex > -1) {
-    // Cancel
-    registrations.splice(isRegisteredIndex, 1);
-    db.set('uni_registrations', registrations);
-    
-    activities.push({
-      studentId: userId,
-      type: 'event_cancel',
-      text: `Cancelled registration for ${event.title}`,
-      time: new Date().toISOString()
-    });
-    db.set('uni_activities', activities);
-    
-    showToast(`Cancelled registration for ${event.title}`, 'error');
+  if (isRegistered) {
+    // Cancel Registration
+    const result = await db.cancelEventRegistration(eventId);
+    if (result.success) {
+      activities.push({
+        studentId: userId,
+        type: 'event_cancel',
+        text: `Cancelled registration for event`,
+        time: new Date().toISOString()
+      });
+      db.set('uni_activities', activities);
+      showToast(result.message || 'Cancelled registration', 'error');
+    } else {
+      showToast(result.message || 'Cancellation failed', 'error');
+    }
   } else {
-    // Add
-    registrations.push({
-      studentId: userId,
-      eventId: eventId,
-      registeredAt: new Date().toISOString().split('T')[0]
-    });
-    db.set('uni_registrations', registrations);
-
-    activities.push({
-      studentId: userId,
-      type: 'event_register',
-      text: `Registered for ${event.title}`,
-      time: new Date().toISOString()
-    });
-    db.set('uni_activities', activities);
-
-    showToast(`Registered successfully for ${event.title}!`, 'success');
+    // Register
+    const result = await db.registerForEvent(eventId);
+    if (result.success) {
+      activities.push({
+        studentId: userId,
+        type: 'event_register',
+        text: `Registered for event`,
+        time: new Date().toISOString()
+      });
+      db.set('uni_activities', activities);
+      showToast(result.message || 'Registered successfully!', 'success');
+    } else {
+      showToast(result.message || 'Registration failed', 'error');
+    }
   }
 
   // Redraw if in event lists page
   if (document.getElementById('events-grid-container')) {
-    initEventsPage(db.getCurrentUser());
+    const currentUser = await db.getCurrentUser();
+    await initEventsPage(currentUser);
   }
 }
 
 // Event Details popup dialog
-function openEventDetailsModal(eventId, user) {
-  const events = db.get('uni_events', []);
-  const registrations = db.get('uni_registrations', []);
+async function openEventDetailsModal(eventId, user) {
+  const events = await db.getEvents();
+  const registeredEvents = user ? await db.getMyEvents() : [];
   const evt = events.find(e => e.id === eventId);
   if (!evt) return;
 
-  const isRegistered = user ? registrations.some(r => r.studentId === user.id && r.eventId === evt.id) : false;
+  const isRegistered = user ? registeredEvents.some(e => e.id === evt.id) : false;
   const today = new Date().toISOString().split('T')[0];
   const isPast = evt.date < today;
 
@@ -222,9 +228,6 @@ function openEventDetailsModal(eventId, user) {
     btnLabel = 'Cancel Registration';
     btnClass = 'btn-accent';
   }
-
-  const canEdit = user && (user.id === evt.authorId || user.role === 'admin');
-  let editBtnHTML = canEdit ? `<button class="btn btn-secondary" id="btn-edit-event-${evt.id}" style="margin-top: 12px; width: 100%;">✏️ Edit Event</button>` : '';
 
   const modalBody = `
     <div style="font-family: var(--font-main);">
@@ -240,24 +243,24 @@ function openEventDetailsModal(eventId, user) {
         <div>🕒 <strong>Time:</strong> ${evt.time}</div>
         <div style="grid-column: 1/-1;">📍 <strong>Venue:</strong> ${evt.venue}</div>
       </div>
-      ${editBtnHTML}
     </div>
   `;
 
   const modalId = modalHelper.create(
     'Event Details', 
     modalBody, 
-    isPast ? null : (closeModal) => {
+    isPast ? null : async (closeModal) => {
       if (!user) {
         showToast('Please log in to register', 'error');
         setTimeout(() => { window.location.href = 'login.html'; }, 1000);
         return;
       }
-      toggleEventRegistration(user.id, eventId);
+      await toggleEventRegistration(user.id, eventId);
       closeModal();
       // redraw events list page if active
       if (document.getElementById('events-grid-container')) {
-        initEventsPage(db.getCurrentUser());
+        const currentUser = await db.getCurrentUser();
+        await initEventsPage(currentUser);
       }
     }
   );
@@ -269,120 +272,178 @@ function openEventDetailsModal(eventId, user) {
       confirmBtn.className = `btn ${btnClass} modal-confirm`;
       confirmBtn.textContent = btnLabel;
     }
-    
-    // Attach edit button listener
-    const editBtn = document.getElementById(`btn-edit-event-${evt.id}`);
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        const m = document.getElementById(modalId);
-        if (m) {
-          m.classList.remove('show');
-          setTimeout(() => m.remove(), 400);
+  }, 10);
+}
+
+// ==========================================
+// 2. CLUBS EXPLORER PAGE (Local Storage based)
+// ==========================================
+function initClubsPage(user) {
+  const searchInput = document.getElementById('club-search');
+  const categoryFilters = document.querySelectorAll('.filter-tag');
+  const gridContainer = document.getElementById('clubs-grid-container');
+
+  let activeCategory = 'All';
+
+  const renderClubs = () => {
+    const clubs = db.get('uni_clubs', []);
+    const memberships = db.get('uni_memberships', []);
+    const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+
+    let filteredClubs = clubs.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(searchText) || c.description.toLowerCase().includes(searchText);
+      const matchesCategory = activeCategory === 'All' || c.category.toLowerCase() === activeCategory.toLowerCase();
+      return matchesSearch && matchesCategory;
+    });
+
+    if (filteredClubs.length === 0) {
+      gridContainer.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--card-shadow); border: 1px solid rgba(226, 232, 240, 0.8);">
+          <div style="font-size: 2.5rem; margin-bottom: 16px;">🔍</div>
+          <h4>No Clubs Found</h4>
+        </div>
+      `;
+      return;
+    }
+
+    gridContainer.innerHTML = filteredClubs.map(c => {
+      const isMember = user ? memberships.some(m => m.studentId === user.id && m.clubId === c.id) : false;
+      const btnText = isMember ? 'Leave Club' : 'Join Club';
+      const btnClass = isMember ? 'btn-secondary' : 'btn-primary';
+
+      // count total members from memberships db
+      const clubMemberCount = memberships.filter(m => m.clubId === c.id).length + c.members;
+
+      return `
+        <div class="glass-card hover-lift club-card">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div style="width: 55px; height: 55px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+              ${c.logo}
+            </div>
+            <div>
+              <h4 style="font-size: 1.1rem; line-height: 1.3;">${c.name}</h4>
+              <span style="font-size: 0.75rem; background: #E2E8F0; padding: 2px 8px; border-radius: 50px; color: var(--text-muted); font-weight:500;">
+                ${c.category}
+              </span>
+            </div>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1;">
+            ${c.description}
+          </p>
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(226, 232, 240, 0.5); padding-top: 16px; margin-top: auto;">
+            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-color);">
+              👥 ${clubMemberCount} Members
+            </span>
+            <button class="btn ${btnClass} btn-join-club" data-club-id="${c.id}" style="padding: 8px 16px; font-size: 0.85rem;">
+              ${btnText}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // join button listeners
+    gridContainer.querySelectorAll('.btn-join-club').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (!user) {
+          showToast('Please log in to join clubs', 'error');
+          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+          return;
         }
-        openEditEventModal(eventId, user);
+        const clubId = e.target.getAttribute('data-club-id');
+        toggleClubMembership(user.id, clubId);
       });
-    }
-  }, 10);
+    });
+  };
+
+  if (searchInput) searchInput.addEventListener('input', renderClubs);
+  categoryFilters.forEach(tag => {
+    tag.addEventListener('click', (e) => {
+      categoryFilters.forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      activeCategory = e.target.getAttribute('data-category');
+      renderClubs();
+    });
+  });
+
+  renderClubs();
 }
 
-// Edit Event Details modal
-function openEditEventModal(eventId, user) {
-  const events = db.get('uni_events', []);
-  const evt = events.find(e => e.id === eventId);
-  if (!evt) return;
+// Toggle Club Membership
+function toggleClubMembership(userId, clubId) {
+  let memberships = db.get('uni_memberships', []);
+  const clubs = db.get('uni_clubs', []);
+  const club = clubs.find(c => c.id === clubId);
+  if (!club) return;
 
-  const modalBody = `
-    <form id="edit-event-form-${evt.id}" style="font-family: var(--font-main);">
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label class="form-label">Title</label>
-        <input type="text" id="edit-title" class="form-control" value="${evt.title}" required>
-      </div>
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label class="form-label">Date</label>
-        <input type="date" id="edit-date" class="form-control" value="${evt.date}" required>
-      </div>
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label class="form-label">Time</label>
-        <input type="time" id="edit-time" class="form-control" value="${evt.time}" required>
-      </div>
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label class="form-label">Venue</label>
-        <input type="text" id="edit-venue" class="form-control" value="${evt.venue}" required>
-      </div>
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label class="form-label">Description</label>
-        <textarea id="edit-desc" class="form-control" rows="4" required>${evt.description}</textarea>
-      </div>
-    </form>
-  `;
+  const index = memberships.findIndex(m => m.studentId === userId && m.clubId === clubId);
+  let activities = db.get('uni_activities', []);
 
-  modalHelper.create(
-    'Edit Event',
-    modalBody,
-    (closeModal) => {
-      const title = document.getElementById('edit-title').value.trim();
-      const date = document.getElementById('edit-date').value;
-      const time = document.getElementById('edit-time').value;
-      const venue = document.getElementById('edit-venue').value.trim();
-      const description = document.getElementById('edit-desc').value.trim();
+  if (index > -1) {
+    // Leave
+    memberships.splice(index, 1);
+    db.set('uni_memberships', memberships);
 
-      if (!title || !date || !time || !venue || !description) {
-        showToast('All fields are required', 'error');
-        return;
-      }
+    activities.push({
+      studentId: userId,
+      type: 'club_leave',
+      text: `Left ${club.name}`,
+      time: new Date().toISOString()
+    });
+    db.set('uni_activities', activities);
 
-      const eventsList = db.get('uni_events', []);
-      const index = eventsList.findIndex(e => e.id === eventId);
-      if (index > -1) {
-        eventsList[index] = { ...eventsList[index], title, date, time, venue, description };
-        db.set('uni_events', eventsList);
-        showToast('Event updated successfully!', 'success');
-        
-        let activities = db.get('uni_activities', []);
-        activities.push({
-          studentId: user.id,
-          type: 'event_edit',
-          text: `Edited event: ${title}`,
-          time: new Date().toISOString()
-        });
-        db.set('uni_activities', activities);
+    showToast(`You left the ${club.name}`, 'error');
+  } else {
+    // Join
+    memberships.push({
+      studentId: userId,
+      clubId: clubId,
+      joinedAt: new Date().toISOString().split('T')[0]
+    });
+    db.set('uni_memberships', memberships);
 
-        closeModal();
-        if (document.getElementById('events-grid-container')) {
-          initEventsPage(user);
-        }
-      }
-    }
-  );
-  
-  setTimeout(() => {
-    const confirmBtn = document.querySelector('.modal-confirm');
-    if (confirmBtn) {
-      confirmBtn.textContent = 'Save Changes';
-    }
-  }, 10);
+    activities.push({
+      studentId: userId,
+      type: 'club_join',
+      text: `Joined ${club.name}`,
+      time: new Date().toISOString()
+    });
+    db.set('uni_activities', activities);
+
+    showToast(`Welcome! You are now a member of ${club.name}`, 'success');
+  }
+
+  // Refresh
+  initClubsPage(db.get('uni_current_user', null));
 }
 
-
 // ==========================================
-// 2. CREATE EVENT PAGE
+// 3. CREATE EVENT PAGE (Saves to MySQL)
 // ==========================================
-function initCreateEventPage(user) {
-  // Guard access - any registered person can create events
-  if (!user) {
-    showToast('Permission denied. You must log in to create events.', 'error');
+async function initCreateEventPage(user) {
+  // Guard access - only leaders or admins can create events
+  if (!user || (user.role !== 'leader' && user.role !== 'admin')) {
+    showToast('Permission denied. Only Club Leaders and Administrators can create events.', 'error');
     setTimeout(() => {
-      window.location.href = 'login.html';
+      window.location.href = 'dashboard.html';
     }, 2000);
     return;
   }
 
   const form = document.getElementById('create-event-form');
+  const clubsSelect = document.getElementById('event-club-select');
 
-  form.addEventListener('submit', (e) => {
+  // Populate clubs dropdown
+  const clubs = db.get('uni_clubs', []);
+  if (clubsSelect) {
+    clubsSelect.innerHTML = clubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const title = document.getElementById('event-title').value.trim();
+    const clubId = clubsSelect.value;
     const date = document.getElementById('event-date').value;
     const time = document.getElementById('event-time').value;
     const venue = document.getElementById('event-venue').value.trim();
@@ -402,50 +463,51 @@ function initCreateEventPage(user) {
       return;
     }
 
-    const newEvent = {
-      id: 'evt-' + Date.now(),
+    const club = clubs.find(c => c.id === clubId);
+    const clubName = club ? club.name : 'Independent';
+
+    const eventData = {
       title,
-      clubId: '',
-      clubName: 'Independent',
+      clubId,
+      clubName,
       date,
       time,
       venue,
       category,
       description,
-      image,
-      authorId: user.id
+      image
     };
 
-    // Save
-    let events = db.get('uni_events', []);
-    events.push(newEvent);
-    db.set('uni_events', events);
+    const result = await db.createEvent(eventData);
 
-    // Save Activity log
-    let activities = db.get('uni_activities', []);
-    activities.push({
-      studentId: user.id,
-      type: 'event_create',
-      text: `Created new event: ${title}`,
-      time: new Date().toISOString()
-    });
-    db.set('uni_activities', activities);
+    if (result.success) {
+      // Save Activity log
+      let activities = db.get('uni_activities', []);
+      activities.push({
+        studentId: user.id,
+        type: 'event_create',
+        text: `Created new event: ${title}`,
+        time: new Date().toISOString()
+      });
+      db.set('uni_activities', activities);
 
-    showToast('Event created successfully!', 'success');
-    form.reset();
+      showToast('Event created successfully!', 'success');
+      form.reset();
 
-    setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 1500);
+      setTimeout(() => {
+        window.location.href = 'events.html';
+      }, 1500);
+    } else {
+      showToast(result.message || 'Event creation failed', 'error');
+    }
   });
 }
 
-
 // ==========================================
-// 3. PROFILE PAGE
+// 4. PROFILE PAGE
 // ==========================================
-function initProfilePage(user) {
-  authGuard();
+async function initProfilePage(user) {
+  await authGuard();
   if (!user) return;
 
   // Render details
@@ -472,9 +534,9 @@ function initProfilePage(user) {
   if (deptInput) deptInput.value = user.department || '';
 
   // Render enrolled events inside profile lists
-  populateProfileLists(user.id);
+  await populateProfileLists(user.id);
 
-  // Edit form submit
+  // Edit form submit (keeps updating local storage user settings)
   const form = document.getElementById('profile-edit-form');
   if (form) {
     form.addEventListener('submit', (e) => {
@@ -493,39 +555,29 @@ function initProfilePage(user) {
         return;
       }
 
-      // Update in users DB
-      let users = db.get('uni_users', []);
-      const index = users.findIndex(u => u.id === user.id);
-      if (index > -1) {
-        users[index] = updatedUser;
-        db.set('uni_users', users);
-        db.setCurrentUser(updatedUser);
-        
-        showToast('Profile updated successfully!', 'success');
-        if (titleName) titleName.textContent = updatedUser.name;
-        
-        // update header if applicable
-        updateNavbarAuthUI();
-      }
+      // Update in local state variables
+      db.set('uni_profile_' + user.id, updatedUser);
+      showToast('Profile settings saved locally', 'success');
+      if (titleName) titleName.textContent = updatedUser.name;
     });
   }
 }
 
-function populateProfileLists(userId) {
+async function populateProfileLists(userId) {
   const eventsContainer = document.getElementById('profile-events-list');
+  const clubsContainer = document.getElementById('profile-clubs-list');
 
-  const registrations = db.get('uni_registrations', []);
-  const events = db.get('uni_events', []);
+  const memberships = db.get('uni_memberships', []);
+  const clubs = db.get('uni_clubs', []);
 
   // Events list drawing
   if (eventsContainer) {
-    const userRegs = registrations.filter(r => r.studentId === userId);
-    const userEvents = events.filter(e => userRegs.some(r => r.eventId === e.id));
+    const userEvents = await db.getMyEvents();
 
     if (userEvents.length === 0) {
       eventsContainer.innerHTML = `
         <div style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">
-          No events registered yet. Explore the <a href="index.html" style="color: var(--secondary-color); font-weight:500;">Events page</a> to sign up!
+          No events registered yet. Explore the <a href="events.html" style="color: var(--secondary-color); font-weight:500;">Events page</a> to sign up!
         </div>
       `;
     } else {
@@ -542,9 +594,46 @@ function populateProfileLists(userId) {
       `).join('');
 
       eventsContainer.querySelectorAll('.btn-cancel-profile-reg').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           const eventId = e.target.getAttribute('data-event-id');
-          toggleEventRegistration(userId, eventId);
+          await toggleEventRegistration(userId, eventId);
+          await populateProfileLists(userId); // redraw
+        });
+      });
+    }
+  }
+
+  // Clubs list drawing (local storage)
+  if (clubsContainer) {
+    const userClubs = memberships.filter(m => m.studentId === userId);
+    const joinedClubs = clubs.filter(c => userClubs.some(m => m.clubId === c.id));
+
+    if (joinedClubs.length === 0) {
+      clubsContainer.innerHTML = `
+        <div style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">
+          No clubs joined yet. Check out the <a href="clubs.html" style="color: var(--secondary-color); font-weight:500;">Clubs directory</a>!
+        </div>
+      `;
+    } else {
+      clubsContainer.innerHTML = joinedClubs.map(c => `
+        <div class="glass-card profile-list-item">
+          <div style="display:flex; align-items:center; gap: 12px;">
+            <div style="font-size: 1.5rem;">${c.logo}</div>
+            <div>
+              <div style="font-weight:600; font-size: 0.95rem;">${c.name}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">${c.category} Category</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-leave-profile-club" data-club-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem;">
+            Leave Club
+          </button>
+        </div>
+      `).join('');
+
+      clubsContainer.querySelectorAll('.btn-leave-profile-club').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const clubId = e.target.getAttribute('data-club-id');
+          toggleClubMembership(userId, clubId);
           populateProfileLists(userId); // redraw
         });
       });
